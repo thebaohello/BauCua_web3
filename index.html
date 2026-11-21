@@ -1,0 +1,1009 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bầu Cua Web3 V4 Auto - Core Mainnet</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
+  <style>
+    * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    body {
+      background: linear-gradient(135deg, #1a1a2e, #16213e);
+      color: #fff;
+      margin: 0;
+      padding: 20px;
+      display: flex;
+      justify-content: center;
+      min-height: 100vh;
+    }
+    .container {
+      max-width: 720px;
+      width: 100%;
+      background: #0f3460;
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+      border: 1px solid #e94560;
+    }
+    h1 {
+      text-align: center;
+      color: #fca311;
+      margin-top: 0;
+      font-size: 25px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .ticker-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+      background: rgba(6, 214, 160, 0.1);
+      border: 1px solid rgba(6, 214, 160, 0.35);
+      padding: 9px 14px;
+      border-radius: 10px;
+      margin-bottom: 14px;
+      font-size: 13px;
+    }
+    .ticker-price {
+      color: #06d6a0;
+      font-weight: bold;
+    }
+    .ticker-meta {
+      color: #cbd5e1;
+      font-size: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .btn-mini {
+      background: rgba(255,255,255,0.12);
+      color: #fff;
+      border: 1px solid rgba(255,255,255,0.2);
+      padding: 4px 9px;
+      border-radius: 6px;
+      font-size: 11px;
+      cursor: pointer;
+    }
+    .btn-mini:hover { background: rgba(255,255,255,0.22); }
+    .wallet-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(0,0,0,0.3);
+      padding: 12px 16px;
+      border-radius: 10px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .wallet-actions {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .btn {
+      background: #e94560;
+      color: white;
+      border: none;
+      padding: 10px 16px;
+      border-radius: 8px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: 0.2s;
+      font-size: 13px;
+    }
+    .btn:hover { background: #ff5c77; transform: translateY(-1px); }
+    .btn:disabled { background: #555; cursor: not-allowed; transform: none; }
+    .btn-sound {
+      background: #23395d;
+      border: 1px solid #4cc9f0;
+      color: #4cc9f0;
+      padding: 9px 12px;
+    }
+    .btn-sound.muted {
+      border-color: #888;
+      color: #aaa;
+      background: rgba(0,0,0,0.25);
+    }
+    .btn-gold {
+      background: #fca311;
+      color: #111;
+      font-size: 15px;
+      padding: 14px 24px;
+      width: 100%;
+      margin-top: 14px;
+    }
+    .btn-gold:hover { background: #ffb732; }
+    .config-box {
+      background: rgba(255,255,255,0.06);
+      padding: 12px;
+      border-radius: 10px;
+      margin-bottom: 16px;
+      font-size: 13px;
+      border: 1px solid rgba(252, 163, 17, 0.35);
+    }
+    .config-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .lock-badge {
+      background: rgba(6, 214, 160, 0.2);
+      color: #06d6a0;
+      padding: 2px 8px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: bold;
+    }
+    .config-box input {
+      width: 100%;
+      padding: 8px 10px;
+      border-radius: 6px;
+      border: 1px solid #3a506b;
+      background: #131b2e;
+      color: #90e0ef;
+      margin-top: 6px;
+      font-family: monospace;
+      cursor: not-allowed;
+      user-select: all;
+    }
+
+    .dice-area {
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      margin: 18px 0;
+      background: radial-gradient(circle at center, #243b55 0%, #141e30 100%);
+      padding: 22px 18px;
+      border-radius: 14px;
+      border: 2px dashed #fca311;
+      transition: box-shadow 0.3s ease, border-color 0.3s ease;
+    }
+    .dice-area.active-roll {
+      border-color: #4cc9f0;
+      box-shadow: 0 0 24px rgba(76, 201, 240, 0.45), inset 0 0 25px rgba(252, 163, 17, 0.25);
+    }
+    .dice-area.win-glow {
+      border-color: #06d6a0;
+      box-shadow: 0 0 28px rgba(6, 214, 160, 0.65), inset 0 0 20px rgba(6, 214, 160, 0.25);
+    }
+    .vapor-layer {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 2;
+      overflow: hidden;
+    }
+    .puff {
+      position: absolute;
+      bottom: -24px;
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(224, 251, 252, 0.55) 0%, rgba(76, 201, 240, 0.18) 55%, rgba(255, 255, 255, 0) 75%);
+      filter: blur(5px);
+      animation: riseVapor 1.35s ease-out forwards;
+    }
+    @keyframes riseVapor {
+      0% { transform: translate(0, 10px) scale(0.5); opacity: 0; }
+      25% { opacity: 0.85; }
+      100% { transform: translate(var(--drift-x, 0px), -125px) scale(1.9); opacity: 0; }
+    }
+    .dice {
+      position: relative;
+      z-index: 3;
+      width: 84px;
+      height: 84px;
+      background: #fff;
+      color: #111;
+      border-radius: 14px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-size: 34px;
+      font-weight: bold;
+      box-shadow: 0 6px 16px rgba(0,0,0,0.45);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .dice span { font-size: 12px; margin-top: 2px; color: #333; }
+    .dice.hit-dice {
+      transform: translateY(-4px) scale(1.06);
+      box-shadow: 0 0 18px #06d6a0, 0 6px 16px rgba(0,0,0,0.45);
+      border: 2px solid #06d6a0;
+    }
+    .shaking { animation: shakeDice 0.26s infinite; }
+    @keyframes shakeDice {
+      0%   { transform: translate(0px, 0px) rotate(0deg); }
+      20%  { transform: translate(-4px, -3px) rotate(-10deg); }
+      40%  { transform: translate(4px, 2px) rotate(10deg); }
+      60%  { transform: translate(-3px, 3px) rotate(-7deg); }
+      80%  { transform: translate(3px, -2px) rotate(7deg); }
+      100% { transform: translate(0px, 0px) rotate(0deg); }
+    }
+
+    .board {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-top: 12px;
+    }
+    .card {
+      background: #1a1a2e;
+      border: 2px solid #2b2d42;
+      border-radius: 12px;
+      padding: 12px 10px;
+      text-align: center;
+      cursor: pointer;
+      transition: 0.2s;
+      user-select: none;
+    }
+    .card:hover { border-color: #fca311; }
+    .card.selected {
+      border-color: #4cc9f0;
+      background: rgba(76, 201, 240, 0.16);
+      box-shadow: 0 0 12px rgba(76, 201, 240, 0.35);
+    }
+    .card .emoji { font-size: 34px; display: block; margin-bottom: 4px; }
+    .card .name { font-weight: bold; font-size: 15px; display: block; }
+    .card .badge {
+      display: inline-block;
+      margin-top: 6px;
+      font-size: 12px;
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: rgba(252, 163, 17, 0.2);
+      color: #fca311;
+    }
+    .bet-controls {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 16px;
+      background: rgba(0,0,0,0.25);
+      padding: 12px 14px;
+      border-radius: 10px;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .bet-input-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 4px;
+    }
+    .bet-controls input {
+      width: 120px;
+      padding: 8px;
+      border-radius: 6px;
+      border: none;
+      font-size: 15px;
+      font-weight: bold;
+      text-align: center;
+    }
+    .usdt-sub {
+      font-size: 12px;
+      color: #06d6a0;
+    }
+    .summary-bar {
+      margin-top: 10px;
+      font-size: 13px;
+      color: #90e0ef;
+      background: rgba(0,0,0,0.2);
+      padding: 10px 12px;
+      border-radius: 8px;
+    }
+    .stats-bar {
+      margin-top: 10px;
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 8px;
+      font-size: 12px;
+      background: rgba(252, 163, 17, 0.1);
+      border: 1px solid rgba(252, 163, 17, 0.3);
+      padding: 8px 12px;
+      border-radius: 8px;
+      color: #ffd166;
+    }
+    .log-box {
+      margin-top: 14px;
+      background: #0b132b;
+      padding: 14px;
+      border-radius: 10px;
+      font-size: 13px;
+      line-height: 1.65;
+      min-height: 90px;
+      border-left: 4px solid #4cc9f0;
+      word-break: break-all;
+    }
+    a { color: #fca311; }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h1>🎲 Bầu Cua Web3 Auto (Core Chain)</h1>
+
+  <div class="ticker-bar">
+    <div>
+      <span>Giá tham khảo: </span>
+      <span class="ticker-price" id="coreUsdtPrice">1 CORE ≈ -- USDT</span>
+    </div>
+    <div class="ticker-meta">
+      <span id="priceUpdatedAt">Đang tải giá...</span>
+      <button class="btn-mini" id="refreshPriceBtn" type="button">↻ Cập nhật giá</button>
+    </div>
+  </div>
+
+  <div class="wallet-bar">
+    <div>
+      <div id="walletAddress" style="font-size: 13px; color: #aaa;">Chưa kết nối ví</div>
+      <div id="walletBalance" style="font-weight: bold; color: #4cc9f0; margin-top: 3px;">Số dư: -- CORE</div>
+    </div>
+    <div class="wallet-actions">
+      <button class="btn btn-sound" id="soundBtn" type="button">🔊 Âm thanh: Bật</button>
+      <button class="btn" id="connectBtn" type="button">Kết nối Ví Web3</button>
+    </div>
+  </div>
+
+  <div class="config-box">
+    <div class="config-header">
+      <label><strong>Địa chỉ Smart Contract Nhà Cái (Trả thưởng tự động):</strong></label>
+      <span class="lock-badge">⚡ Tự động 100%</span>
+    </div>
+    <input type="text" id="contractAddressInput" readonly />
+    <div id="contractBalanceInfo" style="margin-top:6px; font-size:12px; color:#fca311;">
+      Quỹ trả thưởng trong Hợp đồng: -- CORE
+    </div>
+  </div>
+
+  <div class="dice-area" id="diceArea">
+    <div class="vapor-layer" id="vaporLayer"></div>
+    <div class="dice" id="d1">❓<span>Chờ</span></div>
+    <div class="dice" id="d2">❓<span>Chờ</span></div>
+    <div class="dice" id="d3">❓<span>Chờ</span></div>
+  </div>
+
+  <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+    <span style="font-size: 14px; color: #ccc;">1. Chọn <strong>một hoặc nhiều linh vật</strong> muốn đặt cược:</span>
+    <button class="btn" type="button" style="padding:5px 10px; font-size:12px; background:#3a506b;" id="clearSelectionBtn">Bỏ chọn tất cả</button>
+  </div>
+
+  <div class="board" id="board">
+    <div class="card selected" data-id="0">
+      <span class="emoji">🦌</span><span class="name">Nai</span><span class="badge">Đã chọn</span>
+    </div>
+    <div class="card" data-id="1">
+      <span class="emoji">🎃</span><span class="name">Bầu</span><span class="badge" style="opacity:0.4;">Chưa chọn</span>
+    </div>
+    <div class="card" data-id="2">
+      <span class="emoji">🐓</span><span class="name">Gà</span><span class="badge" style="opacity:0.4;">Chưa chọn</span>
+    </div>
+    <div class="card" data-id="3">
+      <span class="emoji">🐟</span><span class="name">Cá</span><span class="badge" style="opacity:0.4;">Chưa chọn</span>
+    </div>
+    <div class="card" data-id="4">
+      <span class="emoji">🦀</span><span class="name">Cua</span><span class="badge" style="opacity:0.4;">Chưa chọn</span>
+    </div>
+    <div class="card" data-id="5">
+      <span class="emoji">🦐</span><span class="name">Tôm</span><span class="badge" style="opacity:0.4;">Chưa chọn</span>
+    </div>
+  </div>
+
+  <div class="bet-controls">
+    <span>2. Mức CORE cược cho <strong>mỗi linh vật đã chọn</strong>:</span>
+    <div class="bet-input-wrap">
+      <div>
+        <input type="number" id="betAmount" value="0.01" step="0.005" min="0.001" />
+        <span style="font-weight: bold; margin-left: 5px; color: #fca311;">CORE / con</span>
+      </div>
+      <div class="usdt-sub" id="unitUsdtHint">≈ -- USDT / con</div>
+    </div>
+  </div>
+
+  <div class="summary-bar" id="summaryBar">
+    Đang chọn: <strong>Nai</strong> (1 con) — Tổng tiền cược ván này: <strong>0.01 CORE</strong>
+  </div>
+
+  <div class="stats-bar" id="statsBar">
+    <span>📊 Phiên này: <strong>0</strong> ván</span>
+    <span>📥 Tổng cược: <strong>0</strong> CORE</span>
+    <span>📤 Tự động trả: <strong>0</strong> CORE</span>
+  </div>
+
+  <button class="btn btn-gold" id="playBtn" type="button" disabled>
+    GỬI CORE CƯỢC & LẮC TỰ ĐỘNG
+  </button>
+
+  <div class="log-box" id="logBox">
+    👋 Bấm <strong>"Kết nối Ví Web3"</strong> để chơi tự động qua Smart Contract trên <strong>Core Mainnet (Chain ID: 1116)</strong>.
+  </div>
+</div>
+
+<script>
+  // =========================================================================
+  // DÁN ĐỊA CHỈ SMART CONTRACT (0x...) ĐÃ DEPLOY TRÊN REMIX VÀO ĐÂY:
+  // =========================================================================
+  const CONTRACT_ADDRESS = "0x1915db8661B56f82368fc309FcaA907e1d11947f";
+
+  const CONTRACT_ABI = [
+    "function playBauCua(uint8[] calldata choices) external payable",
+    "function getContractBalance() external view returns (uint256)",
+    "event RoundPlayed(address indexed player, uint8[3] dice, uint256 betPerItem, uint256 totalBet, uint256 totalPayout)"
+  ];
+
+  const ITEMS = [
+    { name: "Nai", emoji: "🦌" },
+    { name: "Bầu", emoji: "🎃" },
+    { name: "Gà", emoji: "🐓" },
+    { name: "Cá", emoji: "🐟" },
+    { name: "Cua", emoji: "🦀" },
+    { name: "Tôm", emoji: "🦐" }
+  ];
+
+  const CORE_CHAIN_ID_HEX = "0x45c"; // 1116
+  const CORE_NETWORK_PARAMS = {
+    chainId: CORE_CHAIN_ID_HEX,
+    chainName: "Core Blockchain Mainnet",
+    nativeCurrency: { name: "CORE", symbol: "CORE", decimals: 18 },
+    rpcUrls: ["https://rpc.coredao.org"],
+    blockExplorerUrls: ["https://scan.coredao.org"]
+  };
+
+  let provider, signer, userAddress, contract;
+  let selectedIds = new Set([0]);
+  let soundEnabled = true;
+  let audioCtx = null;
+  let shakeSoundTimer = null;
+  let vaporTimer = null;
+
+  let coreUsdtRate = null;
+  let priceTimer = null;
+
+  let sessionRounds = 0;
+  let sessionCollected = 0;
+  let sessionPaid = 0;
+
+  document.getElementById("contractAddressInput").value = CONTRACT_ADDRESS;
+
+  function formatCore(num) {
+    return Number(num.toFixed(6)).toString();
+  }
+
+  function formatUsdt(coreAmount) {
+    if (!coreUsdtRate || !isFinite(coreAmount)) return "-- USDT";
+    const usdtVal = coreAmount * coreUsdtRate;
+    if (usdtVal > 0 && usdtVal < 0.0001) {
+      return `~$${usdtVal.toFixed(6)} USDT`;
+    }
+    return `~$${usdtVal.toFixed(4)} USDT`;
+  }
+
+  function renderPriceTicker(updatedText = null) {
+    const priceEl = document.getElementById("coreUsdtPrice");
+    const timeEl = document.getElementById("priceUpdatedAt");
+    if (coreUsdtRate && isFinite(coreUsdtRate)) {
+      const rateDisplay = coreUsdtRate < 0.01 ? coreUsdtRate.toFixed(6) : coreUsdtRate.toFixed(4);
+      priceEl.innerText = `1 CORE ≈ $${rateDisplay} USDT`;
+    } else {
+      priceEl.innerText = "1 CORE ≈ -- USDT";
+    }
+    if (updatedText) {
+      timeEl.innerText = updatedText;
+    }
+  }
+
+  async function fetchCoreUsdtPrice() {
+    const nowStr = new Date().toLocaleTimeString("vi-VN", { hour12: false });
+    try {
+      const cgRes = await fetch("https://api.coingecko.com/api/v3/simple/price?ids=coredaoorg&vs_currencies=usd", {
+        cache: "no-store"
+      });
+      if (cgRes.ok) {
+        const cgData = await cgRes.json();
+        const usdPrice = cgData?.coredaoorg?.usd;
+        if (typeof usdPrice === "number" && usdPrice > 0) {
+          coreUsdtRate = usdPrice;
+          renderPriceTicker(`Cập nhật ${nowStr}`);
+          updateSummary();
+          return;
+        }
+      }
+      throw new Error("CoinGecko không trả về giá hợp lệ");
+    } catch (_) {
+      try {
+        const krRes = await fetch("https://api.kraken.com/0/public/Ticker?pair=COREUSD", {
+          cache: "no-store"
+        });
+        if (krRes.ok) {
+          const krData = await krRes.json();
+          const pairObj = krData?.result && Object.values(krData.result)[0];
+          const lastStr = pairObj?.c?.[0];
+          const lastNum = parseFloat(lastStr);
+          if (isFinite(lastNum) && lastNum > 0) {
+            coreUsdtRate = lastNum;
+            renderPriceTicker(`Dự phòng ${nowStr}`);
+            updateSummary();
+            return;
+          }
+        }
+      } catch (_) {}
+
+      if (coreUsdtRate) {
+        renderPriceTicker(`Giữ giá cũ (${nowStr})`);
+      } else {
+        renderPriceTicker(`Lỗi mạng (${nowStr})`);
+      }
+    }
+  }
+
+  function updateStatsBar() {
+    const collectedUsdt = coreUsdtRate ? ` <span style="opacity:0.85;">(${formatUsdt(sessionCollected)})</span>` : "";
+    const paidUsdt = coreUsdtRate ? ` <span style="opacity:0.85;">(${formatUsdt(sessionPaid)})</span>` : "";
+    document.getElementById("statsBar").innerHTML =
+      `<span>📊 Phiên này: <strong>${sessionRounds}</strong> ván</span>` +
+      `<span>📥 Tổng cược: <strong>${formatCore(sessionCollected)}</strong> CORE${collectedUsdt}</span>` +
+      `<span>📤 Tự động trả: <strong>${formatCore(sessionPaid)}</strong> CORE${paidUsdt}</span>`;
+  }
+
+  function getAudioContext() {
+    if (!soundEnabled) return null;
+    if (!audioCtx) {
+      const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+      if (AudioContextClass) {
+        audioCtx = new AudioContextClass();
+      }
+    }
+    if (audioCtx && audioCtx.state === "suspended") {
+      audioCtx.resume().catch(() => {});
+    }
+    return audioCtx;
+  }
+
+  function playClickSound(freq = 520, duration = 0.06) {
+    const ctx = getAudioContext();
+    if (!ctx) return;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = "triangle";
+    osc.frequency.setValueAtTime(freq, ctx.currentTime);
+    gain.gain.setValueAtTime(0.08, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start();
+    osc.stop(ctx.currentTime + duration);
+  }
+
+  function playRattleTick() {
+    const ctx = getAudioContext();
+    if (!ctx) return;
+    const bufferSize = Math.floor(ctx.sampleRate * 0.035);
+    const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) {
+      data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (bufferSize * 0.35));
+    }
+
+    const noise = ctx.createBufferSource();
+    noise.buffer = buffer;
+
+    const filter = ctx.createBiquadFilter();
+    filter.type = "bandpass";
+    filter.frequency.setValueAtTime(1600 + Math.random() * 1400, ctx.currentTime);
+    filter.Q.setValueAtTime(2.2, ctx.currentTime);
+
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(0.16, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.035);
+
+    noise.connect(filter);
+    filter.connect(gain);
+    gain.connect(ctx.destination);
+    noise.start();
+  }
+
+  function playWinSound() {
+    const ctx = getAudioContext();
+    if (!ctx) return;
+    const notes = [523.25, 659.25, 783.99, 1046.5];
+    notes.forEach((freq, idx) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      const startTime = ctx.currentTime + idx * 0.09;
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(freq, startTime);
+      gain.gain.setValueAtTime(0.12, startTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.25);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(startTime);
+      osc.stop(startTime + 0.26);
+    });
+  }
+
+  function playLoseSound() {
+    const ctx = getAudioContext();
+    if (!ctx) return;
+    const notes = [330, 261.63];
+    notes.forEach((freq, idx) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      const startTime = ctx.currentTime + idx * 0.14;
+      osc.type = "sawtooth";
+      osc.frequency.setValueAtTime(freq, startTime);
+      gain.gain.setValueAtTime(0.06, startTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.22);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(startTime);
+      osc.stop(startTime + 0.23);
+    });
+  }
+
+  function spawnVaporPuff(burst = false) {
+    const layer = document.getElementById("vaporLayer");
+    if (!layer) return;
+    const count = burst ? 7 : 2;
+    for (let i = 0; i < count; i++) {
+      const puff = document.createElement("div");
+      puff.className = "puff";
+      const leftPct = 10 + Math.random() * 80;
+      const driftX = (Math.random() - 0.5) * 90;
+      const size = 45 + Math.random() * 45;
+      puff.style.left = `${leftPct}%`;
+      puff.style.width = `${size}px`;
+      puff.style.height = `${size}px`;
+      puff.style.setProperty("--drift-x", `${driftX}px`);
+      layer.appendChild(puff);
+      setTimeout(() => puff.remove(), 1400);
+    }
+  }
+
+  function startRollingEffects() {
+    const area = document.getElementById("diceArea");
+    area.classList.remove("win-glow");
+    area.classList.add("active-roll");
+
+    const dices = [document.getElementById("d1"), document.getElementById("d2"), document.getElementById("d3")];
+    dices.forEach(d => {
+      d.classList.remove("hit-dice");
+      d.classList.add("shaking");
+      d.innerHTML = `🎲<span>Lắc...</span>`;
+    });
+
+    stopRollingEffects(false);
+    spawnVaporPuff(true);
+    playRattleTick();
+
+    shakeSoundTimer = setInterval(() => {
+      playRattleTick();
+    }, 115);
+
+    vaporTimer = setInterval(() => {
+      spawnVaporPuff(false);
+    }, 260);
+  }
+
+  function stopRollingEffects(clearClasses = true) {
+    if (shakeSoundTimer) {
+      clearInterval(shakeSoundTimer);
+      shakeSoundTimer = null;
+    }
+    if (vaporTimer) {
+      clearInterval(vaporTimer);
+      vaporTimer = null;
+    }
+    if (clearClasses) {
+      document.getElementById("diceArea").classList.remove("active-roll");
+      document.querySelectorAll(".dice").forEach(d => d.classList.remove("shaking"));
+    }
+  }
+
+  function toggleSound() {
+    soundEnabled = !soundEnabled;
+    const btn = document.getElementById("soundBtn");
+    if (soundEnabled) {
+      btn.innerText = "🔊 Âm thanh: Bật";
+      btn.classList.remove("muted");
+      playClickSound(660, 0.08);
+    } else {
+      btn.innerText = "🔇 Âm thanh: Tắt";
+      btn.classList.add("muted");
+      stopRollingEffects(false);
+    }
+  }
+
+  function log(msg) {
+    document.getElementById("logBox").innerHTML = msg;
+  }
+
+  function updateSummary() {
+    const perBet = parseFloat(document.getElementById("betAmount").value) || 0;
+    const count = selectedIds.size;
+    const total = perBet * count;
+    const totalStr = formatCore(total);
+    const names = Array.from(selectedIds).map(id => ITEMS[id].name);
+
+    document.getElementById("unitUsdtHint").innerText =
+      `≈ ${formatUsdt(perBet)} / con`;
+
+    document.querySelectorAll(".card").forEach(card => {
+      const id = parseInt(card.getAttribute("data-id"), 10);
+      const badge = card.querySelector(".badge");
+      if (selectedIds.has(id)) {
+        card.classList.add("selected");
+        badge.innerText = perBet > 0 ? `Cược ${perBet} CORE` : "Đã chọn";
+        badge.style.opacity = "1";
+      } else {
+        card.classList.remove("selected");
+        badge.innerText = "Chưa chọn";
+        badge.style.opacity = "0.4";
+      }
+    });
+
+    if (count === 0) {
+      document.getElementById("summaryBar").innerHTML =
+        `⚠️ Chưa chọn linh vật nào — Hãy bấm vào ô <strong>Gà, Bầu, Nai...</strong> để chọn.`;
+    } else {
+      const totalUsdtText = coreUsdtRate ? ` (<span style="color:#06d6a0;">${formatUsdt(total)}</span>)` : "";
+      document.getElementById("summaryBar").innerHTML =
+        `Đang chọn: <strong>${names.join(", ")}</strong> (${count} linh vật) — Tổng CORE gửi đi ván này: <strong>${totalStr || 0} CORE</strong>${totalUsdtText}`;
+    }
+
+    updateStatsBar();
+  }
+
+  function toggleItem(id) {
+    playClickSound(selectedIds.has(id) ? 420 : 620, 0.06);
+    if (selectedIds.has(id)) {
+      selectedIds.delete(id);
+    } else {
+      selectedIds.add(id);
+    }
+    updateSummary();
+  }
+
+  function clearSelection() {
+    playClickSound(360, 0.07);
+    selectedIds.clear();
+    updateSummary();
+  }
+
+  function getEthereumProvider() {
+    if (window.okxwallet) return window.okxwallet;
+    if (window.ethereum) return window.ethereum;
+    return null;
+  }
+
+  async function updateBalances() {
+    if (!provider) return;
+    if (userAddress) {
+      const bal = await provider.getBalance(userAddress);
+      const val = parseFloat(ethers.utils.formatEther(bal));
+      const formatted = val.toFixed(4);
+      const usdtPart = coreUsdtRate ? ` (${formatUsdt(val)})` : "";
+      document.getElementById("walletBalance").innerText = `Số dư: ${formatted} CORE${usdtPart}`;
+    }
+    if (ethers.utils.isAddress(CONTRACT_ADDRESS)) {
+      const cBal = await provider.getBalance(CONTRACT_ADDRESS);
+      const cVal = parseFloat(ethers.utils.formatEther(cBal));
+      const cFormatted = cVal.toFixed(4);
+      const cUsdtPart = coreUsdtRate ? ` (${formatUsdt(cVal)})` : "";
+      document.getElementById("contractBalanceInfo").innerText = `Quỹ trả thưởng trong Hợp đồng: ${cFormatted} CORE${cUsdtPart}`;
+    }
+  }
+
+  async function connectWallet() {
+    playClickSound(580, 0.08);
+    const eth = getEthereumProvider();
+    if (!eth) {
+      log("❌ Không tìm thấy ví Web3! Hãy kiểm tra tiện ích OKX Wallet hoặc MetaMask.");
+      return;
+    }
+
+    if (!ethers.utils.isAddress(CONTRACT_ADDRESS)) {
+      log("❌ Chưa dán đúng địa chỉ Smart Contract (0x...) vào hằng số CONTRACT_ADDRESS trong file index.html!");
+      return;
+    }
+
+    try {
+      log("⏳ Đang kết nối ví Web3...");
+      await eth.request({ method: "eth_requestAccounts" });
+
+      try {
+        await eth.request({
+          method: "wallet_switchEthereumChain",
+          params: [{ chainId: CORE_CHAIN_ID_HEX }]
+        });
+      } catch (switchError) {
+        if (switchError.code === 4902) {
+          await eth.request({
+            method: "wallet_addEthereumChain",
+            params: [CORE_NETWORK_PARAMS]
+          });
+        } else {
+          throw switchError;
+        }
+      }
+
+      if (typeof ethers === "undefined") {
+        throw new Error("Không tải được thư viện ethers.js.");
+      }
+
+      provider = new ethers.providers.Web3Provider(eth);
+      signer = provider.getSigner();
+      userAddress = await signer.getAddress();
+      contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
+
+      document.getElementById("walletAddress").innerText =
+        `Ví hiện tại: ${userAddress.slice(0, 6)}...${userAddress.slice(-4)}`;
+      document.getElementById("connectBtn").innerText = "Đã kết nối ✅";
+      document.getElementById("playBtn").disabled = false;
+
+      await updateBalances();
+      log(`✅ Đã kết nối ví <strong>${userAddress.slice(0, 8)}...</strong> trên <strong>Core Mainnet</strong>. Sẵn sàng quay & nhận thưởng tự động từ Hợp đồng!`);
+    } catch (err) {
+      log(`❌ Lỗi kết nối: ${err.message || err}`);
+    }
+  }
+
+  async function placeBetAndRoll() {
+    const perBetVal = parseFloat(document.getElementById("betAmount").value);
+
+    if (!ethers.utils.isAddress(CONTRACT_ADDRESS)) {
+      playLoseSound();
+      log("❌ Địa chỉ Smart Contract trong code chưa hợp lệ!");
+      return;
+    }
+    if (selectedIds.size === 0) {
+      playLoseSound();
+      log("❌ Vui lòng chọn ít nhất 1 linh vật để đặt cược!");
+      return;
+    }
+    if (!perBetVal || perBetVal <= 0) {
+      playLoseSound();
+      log("❌ Vui lòng nhập mức CORE cược lớn hơn 0!");
+      return;
+    }
+
+    const eth = getEthereumProvider();
+    provider = new ethers.providers.Web3Provider(eth);
+    signer = provider.getSigner();
+    userAddress = await signer.getAddress();
+    contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
+
+    document.getElementById("walletAddress").innerText =
+      `Ví hiện tại: ${userAddress.slice(0, 6)}...${userAddress.slice(-4)}`;
+
+    const choicesArray = Array.from(selectedIds);
+    const totalBet = perBetVal * choicesArray.length;
+    const totalBetStr = formatCore(totalBet);
+
+    const playBtn = document.getElementById("playBtn");
+    playBtn.disabled = true;
+
+    try {
+      const amountWei = ethers.utils.parseEther(totalBetStr);
+      const chosenNames = choicesArray.map(id => ITEMS[id].name).join(", ");
+      const betUsdtNote = coreUsdtRate ? ` (${formatUsdt(totalBet)})` : "";
+
+      log(`⏳ Đang mở ví... Xác nhận gọi <strong>playBauCua</strong> gửi tổng <strong>${totalBetStr} CORE</strong>${betUsdtNote} cho các cửa: <strong>${chosenNames}</strong>.`);
+
+      const tx = await contract.playBauCua(choicesArray, { value: amountWei });
+
+      log(`🚀 Đã gửi giao dịch lên Core Mainnet! Hợp đồng đang quay xúc xắc & xử lý trả thưởng tự động...<br>Tx: <a href="https://scan.coredao.org/tx/${tx.hash}" target="_blank">${tx.hash.slice(0, 18)}...</a>`);
+
+      startRollingEffects();
+      const receipt = await tx.wait();
+      stopRollingEffects(true);
+
+      let diceFromChain = null;
+      let payoutWeiFromChain = ethers.BigNumber.from(0);
+
+      for (const ev of (receipt.events || [])) {
+        if (ev.event === "RoundPlayed" && ev.args) {
+          diceFromChain = [
+            Number(ev.args.dice[0]),
+            Number(ev.args.dice[1]),
+            Number(ev.args.dice[2])
+          ];
+          payoutWeiFromChain = ev.args.totalPayout;
+          break;
+        }
+      }
+
+      if (!diceFromChain) {
+        diceFromChain = [
+          Math.floor(Math.random() * 6),
+          Math.floor(Math.random() * 6),
+          Math.floor(Math.random() * 6)
+        ];
+      }
+
+      const totalWin = parseFloat(ethers.utils.formatEther(payoutWeiFromChain));
+
+      sessionRounds += 1;
+      sessionCollected += totalBet;
+      sessionPaid += totalWin;
+      updateStatsBar();
+
+      const dices = [document.getElementById("d1"), document.getElementById("d2"), document.getElementById("d3")];
+      dices.forEach((d, idx) => {
+        const item = ITEMS[diceFromChain[idx]];
+        d.innerHTML = `${item.emoji}<span>${item.name}</span>`;
+        if (selectedIds.has(diceFromChain[idx])) {
+          d.classList.add("hit-dice");
+        }
+      });
+
+      spawnVaporPuff(true);
+      await updateBalances();
+
+      let details = [];
+      selectedIds.forEach(id => {
+        const hitCount = diceFromChain.filter(r => r === id).length;
+        if (hitCount > 0) {
+          const winOfItem = perBetVal * (hitCount + 1);
+          const itemUsdt = coreUsdtRate ? ` (${formatUsdt(winOfItem)})` : "";
+          details.push(`✅ <strong>${ITEMS[id].name}</strong> về ${hitCount} lần -> <strong>${formatCore(winOfItem)} CORE</strong>${itemUsdt}`);
+        } else {
+          details.push(`❌ <strong>${ITEMS[id].name}</strong> không về (mất ${perBetVal} CORE)`);
+        }
+      });
+
+      let resultHtml = `🎯 Kết quả 3 xúc xắc: <strong>${ITEMS[diceFromChain[0]].name} - ${ITEMS[diceFromChain[1]].name} - ${ITEMS[diceFromChain[2]].name}</strong><br>`;
+      resultHtml += details.join("<br>") + "<br>";
+      resultHtml += `🔍 Xem giao dịch trên Core Scan: <a href="https://scan.coredao.org/tx/${tx.hash}" target="_blank">Mở Tx</a>`;
+
+      if (totalWin > 0) {
+        playWinSound();
+        document.getElementById("diceArea").classList.add("win-glow");
+        const winStr = formatCore(totalWin);
+        const winUsdt = coreUsdtRate ? ` (${formatUsdt(totalWin)})` : "";
+        resultHtml += `<br>⚡🏆 <span style="color:#06d6a0; font-weight:bold;">HỢP ĐỒNG ĐÃ TỰ ĐỘNG TRẢ ${winStr} CORE${winUsdt} VỀ VÍ CỦA BẠN!</span>`;
+      } else {
+        playLoseSound();
+        resultHtml += `<br>😢 Ván này không trúng cửa nào. Tiền cược <strong>${totalBetStr} CORE</strong> đã vào quỹ Hợp đồng.`;
+      }
+
+      log(resultHtml);
+    } catch (err) {
+      stopRollingEffects(true);
+      playLoseSound();
+      log(`⚠️ Giao dịch bị hủy hoặc lỗi: ${err.reason || err.data?.message || err.message || err}`);
+    } finally {
+      playBtn.disabled = false;
+    }
+  }
+
+  document.querySelectorAll(".card").forEach(card => {
+    card.addEventListener("click", () => {
+      const id = parseInt(card.getAttribute("data-id"), 10);
+      toggleItem(id);
+    });
+  });
+
+  document.getElementById("soundBtn").addEventListener("click", toggleSound);
+  document.getElementById("betAmount").addEventListener("input", updateSummary);
+  document.getElementById("clearSelectionBtn").addEventListener("click", clearSelection);
+  document.getElementById("connectBtn").addEventListener("click", connectWallet);
+  document.getElementById("playBtn").addEventListener("click", placeBetAndRoll);
+  document.getElementById("refreshPriceBtn").addEventListener("click", fetchCoreUsdtPrice);
+
+  updateSummary();
+  updateStatsBar();
+  fetchCoreUsdtPrice();
+  priceTimer = setInterval(fetchCoreUsdtPrice, 30000);
+</script>
+
+</body>
+</html>
