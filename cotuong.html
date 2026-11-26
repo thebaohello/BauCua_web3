@@ -3,1323 +3,1235 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Cờ Tướng Web3 - Core Mainnet</title>
+  <title>Cờ Tướng Web3 - Đấu Người & AI Ăn CORE</title>
+  <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.13.4/ethers.umd.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Noto+Serif+SC:wght@700;900&display=swap" rel="stylesheet">
   <style>
-    :root {
-      --bg: #12151c;
-      --panel: #1b202b;
-      --panel-2: #242b3a;
-      --border: #333d52;
-      --text: #f3f4f6;
-      --muted: #9ca3af;
-      --accent: #f59e0b;
-      --accent-hover: #d97706;
-      --green: #10b981;
-      --red: #ef4444;
-      --board-bg: #e7c288;
-      --board-line: #5c3a16;
-    }
-
-    * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
-      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 16px;
+      font-family: 'Inter', sans-serif;
+      background: radial-gradient(circle at top, #1e1b18 0%, #0f0d0c 100%);
+      color: #f3efe6;
     }
-
-    header {
-      width: 100%;
-      max-width: 1060px;
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: space-between;
-      align-items: center;
-      gap: 12px;
-      background: var(--panel);
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      padding: 14px 18px;
-      margin-bottom: 16px;
+    .hanzi {
+      font-family: 'Noto Serif SC', serif;
     }
-
-    .brand {
-      display: flex;
-      align-items: center;
-      gap: 10px;
+    /* Bàn cờ tướng gỗ cổ điển */
+    .board-wood {
+      background: linear-gradient(135deg, #e6b87d 0%, #d49b54 50%, #c4873e 100%);
+      box-shadow: 0 18px 40px rgba(0, 0, 0, 0.75), inset 0 0 0 3px #6b3e14;
     }
-
-    .brand h1 {
-      font-size: 1.25rem;
-      color: var(--accent);
-      letter-spacing: 0.3px;
+    .piece-shadow {
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.55), inset 0 2px 3px rgba(255, 255, 255, 0.65);
     }
-
-    .badge {
-      font-size: 0.75rem;
-      background: rgba(245, 158, 11, 0.15);
-      color: var(--accent);
-      border: 1px solid rgba(245, 158, 11, 0.35);
-      padding: 3px 8px;
-      border-radius: 999px;
-      font-weight: 600;
-    }
-
-    .wallet-bar {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .info-pill {
-      background: var(--panel-2);
-      border: 1px solid var(--border);
-      padding: 7px 12px;
-      border-radius: 10px;
-      font-size: 0.85rem;
-      color: var(--text);
-    }
-
-    button {
-      cursor: pointer;
-      border: none;
-      border-radius: 10px;
-      font-weight: 600;
-      font-size: 0.9rem;
-      padding: 9px 15px;
-      transition: all 0.15s ease;
-    }
-
-    button:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
-
-    .btn-primary {
-      background: var(--accent);
-      color: #111827;
-    }
-    .btn-primary:hover:not(:disabled) { background: var(--accent-hover); }
-
-    .btn-green {
-      background: var(--green);
-      color: #06281e;
-    }
-    .btn-green:hover:not(:disabled) { filter: brightness(1.08); }
-
-    .btn-danger {
-      background: var(--red);
-      color: #fff;
-    }
-    .btn-danger:hover:not(:disabled) { filter: brightness(1.08); }
-
-    .btn-ghost {
-      background: var(--panel-2);
-      color: var(--text);
-      border: 1px solid var(--border);
-    }
-    .btn-ghost:hover:not(:disabled) { border-color: var(--accent); }
-
-    .main-grid {
-      width: 100%;
-      max-width: 1060px;
-      display: grid;
-      grid-template-columns: minmax(320px, 500px) 1fr;
-      gap: 18px;
-      align-items: start;
-    }
-
-    @media (max-width: 860px) {
-      .main-grid {
-        grid-template-columns: 1fr;
-      }
-    }
-
-    .board-card {
-      background: var(--panel);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 14px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
-
-    .board-wrapper {
-      width: 100%;
-      max-width: 468px;
-      aspect-ratio: 9 / 10;
-      background: var(--board-bg);
-      border: 3px solid #6b4218;
-      border-radius: 10px;
-      padding: 16px;
-      position: relative;
-      box-shadow: inset 0 0 24px rgba(92, 58, 22, 0.25);
-      user-select: none;
-    }
-
-    svg.board-lines {
-      position: absolute;
-      inset: 16px;
-      width: calc(100% - 32px);
-      height: calc(100% - 32px);
-      pointer-events: none;
-    }
-
-    .pieces-grid {
-      position: relative;
-      z-index: 2;
-      width: 100%;
-      height: 100%;
-      display: grid;
-      grid-template-columns: repeat(9, 1fr);
-      grid-template-rows: repeat(10, 1fr);
-    }
-
-    .cell {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      position: relative;
-      cursor: pointer;
-    }
-
-    .cell.valid-target::after {
-      content: "";
-      width: 14px;
-      height: 14px;
-      border-radius: 50%;
-      background: rgba(16, 185, 129, 0.75);
-      box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.25);
-    }
-
-    .cell.last-move::before {
-      content: "";
-      position: absolute;
-      inset: 3px;
-      border: 2px dashed rgba(245, 158, 11, 0.85);
-      border-radius: 50%;
-      pointer-events: none;
-    }
-
-    .piece {
-      width: 84%;
-      height: 84%;
-      border-radius: 50%;
-      background: radial-gradient(circle at 32% 30%, #fff8eb, #e6cfa7 72%, #c9a773);
-      border: 2px solid #784b1d;
-      box-shadow: 0 3px 6px rgba(0, 0, 0, 0.35);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: 800;
-      font-size: clamp(15px, 2.3vw, 22px);
-      transition: transform 0.12s ease, box-shadow 0.12s ease;
-    }
-
-    .piece.red {
-      color: #b91c1c;
-      border-color: #991b1b;
-    }
-
-    .piece.black {
-      color: #111827;
-      border-color: #1f2937;
-    }
-
-    .piece.selected {
+    .piece-selected {
       transform: scale(1.12);
-      box-shadow: 0 0 0 3px #f59e0b, 0 6px 12px rgba(0,0,0,0.45);
+      box-shadow: 0 0 0 3px #facc15, 0 8px 16px rgba(250, 204, 21, 0.6);
     }
-
-    .side-panel {
-      display: flex;
-      flex-direction: column;
-      gap: 14px;
+    .piece-pending {
+      box-shadow: 0 0 0 3px #38bdf8, 0 8px 16px rgba(56, 189, 248, 0.65);
+      animation: pulseBorder 1.2s infinite;
     }
-
-    .card {
-      background: var(--panel);
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      padding: 16px;
+    @keyframes pulseBorder {
+      0%, 100% { transform: scale(1.06); }
+      50% { transform: scale(1.13); }
     }
-
-    .card h2 {
-      font-size: 1rem;
-      color: var(--accent);
-      margin-bottom: 12px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-
-    .form-row {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-      margin-bottom: 12px;
-    }
-
-    label {
-      display: block;
-      font-size: 0.8rem;
-      color: var(--muted);
-      margin-bottom: 5px;
-    }
-
-    input, select {
-      width: 100%;
-      background: var(--panel-2);
-      color: var(--text);
-      border: 1px solid var(--border);
-      border-radius: 9px;
-      padding: 9px 11px;
-      font-size: 0.92rem;
-    }
-
-    input:focus, select:focus {
-      outline: none;
-      border-color: var(--accent);
-    }
-
-    .quick-bets {
-      display: flex;
-      gap: 6px;
-      margin-bottom: 12px;
-      flex-wrap: wrap;
-    }
-
-    .quick-bets button {
-      padding: 5px 10px;
-      font-size: 0.8rem;
-      background: var(--panel-2);
-      color: var(--text);
-      border: 1px solid var(--border);
-    }
-
-    .quick-bets button:hover {
-      border-color: var(--accent);
-      color: var(--accent);
-    }
-
-    .status-box {
-      background: var(--panel-2);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 11px 13px;
-      font-size: 0.88rem;
-      line-height: 1.5;
-    }
-
-    .stats-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 8px;
-      margin-top: 10px;
-    }
-
-    .stat-item {
-      background: var(--panel-2);
-      border: 1px solid var(--border);
-      border-radius: 9px;
-      padding: 8px;
-      text-align: center;
-    }
-
-    .stat-item .k {
-      font-size: 0.74rem;
-      color: var(--muted);
-    }
-
-    .stat-item .v {
-      font-size: 0.95rem;
-      font-weight: 700;
-      margin-top: 2px;
-    }
-
-    .actions {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      margin-top: 12px;
-    }
-
-    .contract-meta {
-      font-size: 0.78rem;
-      color: var(--muted);
-      word-break: break-all;
-      line-height: 1.45;
-    }
-
-    .contract-meta code {
-      color: #fcd34d;
-      background: rgba(245, 158, 11, 0.1);
-      padding: 1px 5px;
-      border-radius: 5px;
-    }
+    /* Thanh cuộn gọn cho khung chat & danh sách phòng */
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.05); }
+    ::-webkit-scrollbar-thumb { background: rgba(217, 119, 6, 0.5); border-radius: 9999px; }
   </style>
 </head>
-<body>
+<body class="min-h-screen flex flex-col">
 
-  <header>
-    <div class="brand">
-      <h1>♟️ Cờ Tướng Web3</h1>
-      <span class="badge">Core Mainnet (1116)</span>
-    </div>
-    <div class="wallet-bar">
-      <div class="info-pill" id="poolBalancePill">Quỹ nhà cái: -- CORE</div>
-      <div class="info-pill" id="walletBalancePill">Ví: Chưa kết nối</div>
-      <button class="btn-primary" id="btnConnect">Kết nối Ví</button>
+  <!-- HEADER & KẾT NỐI VÍ WEB3 -->
+  <header class="border-b border-amber-900/40 bg-stone-950/90 backdrop-blur sticky top-0 z-30">
+    <div class="max-w-7xl mx-auto px-3 sm:px-6 py-3 flex flex-wrap items-center justify-between gap-3">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-red-700 flex items-center justify-center font-black text-xl hanzi text-amber-50 shadow-lg">
+          帥
+        </div>
+        <div>
+          <h1 class="text-base sm:text-lg font-extrabold tracking-tight text-amber-400">CỜ TƯỚNG WEB3 ARENA</h1>
+          <p class="text-xs text-stone-400">Mạng Core Mainnet (1116) • Cược CORE Minh Bạch</p>
+        </div>
+      </div>
+
+      <!-- Chuyển nhanh chế độ chơi -->
+      <div class="flex items-center bg-stone-900 p-1 rounded-xl border border-stone-800">
+        <button id="tabPvP" onclick="switchGameMode('pvp')" class="px-3 py-1.5 rounded-lg text-xs sm:text-sm font-bold bg-amber-600 text-white transition">
+          ⚔️ Chơi Với Người
+        </button>
+        <button id="tabAI" onclick="switchGameMode('ai')" class="px-3 py-1.5 rounded-lg text-xs sm:text-sm font-bold text-stone-300 hover:text-white transition">
+          🤖 Chơi Với Máy
+        </button>
+      </div>
+
+      <!-- Nút kết nối ví OKX / MetaMask -->
+      <div class="flex items-center gap-2">
+        <div id="walletBalanceBox" class="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-stone-900 border border-amber-700/40 text-xs font-semibold text-amber-300">
+          <span>Số dư:</span>
+          <span id="walletBalance">0.00 CORE</span>
+        </div>
+        <button id="btnConnectWallet" onclick="connectWallet()" class="px-3.5 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-stone-950 font-bold text-xs sm:text-sm shadow-md transition">
+          Kết Nối Ví Web3
+        </button>
+      </div>
     </div>
   </header>
 
-  <div class="main-grid">
-    <!-- BÀN CỜ TƯỚNG -->
-    <div class="board-card">
-      <div class="board-wrapper">
-        <svg class="board-lines" viewBox="0 0 800 900" preserveAspectRatio="none">
-          <!-- Khung ngoài -->
-          <rect x="0" y="0" width="800" height="900" fill="none" stroke="#5c3a16" stroke-width="5"/>
-          <!-- Các đường ngang -->
-          <line x1="0" y1="100" x2="800" y2="100" stroke="#5c3a16" stroke-width="2.5"/>
-          <line x1="0" y1="200" x2="800" y2="200" stroke="#5c3a16" stroke-width="2.5"/>
-          <line x1="0" y1="300" x2="800" y2="300" stroke="#5c3a16" stroke-width="2.5"/>
-          <line x1="0" y1="400" x2="800" y2="400" stroke="#5c3a16" stroke-width="2.5"/>
-          <line x1="0" y1="500" x2="800" y2="500" stroke="#5c3a16" stroke-width="2.5"/>
-          <line x1="0" y1="600" x2="800" y2="600" stroke="#5c3a16" stroke-width="2.5"/>
-          <line x1="0" y1="700" x2="800" y2="700" stroke="#5c3a16" stroke-width="2.5"/>
-          <line x1="0" y1="800" x2="800" y2="800" stroke="#5c3a16" stroke-width="2.5"/>
-          <!-- Các đường dọc hai nửa bàn cờ -->
-          <line x1="100" y1="0" x2="100" y2="400" stroke="#5c3a16" stroke-width="2.5"/>
-          <line x1="200" y1="0" x2="200" y2="400" stroke="#5c3a16" stroke-width="2.5"/>
-          <line x1="300" y1="0" x2="300" y2="400" stroke="#5c3a16" stroke-width="2.5"/>
-          <line x1="400" y1="0" x2="400" y2="400" stroke="#5c3a16" stroke-width="2.5"/>
-          <line x1="500" y1="0" x2="500" y2="400" stroke="#5c3a16" stroke-width="2.5"/>
-          <line x1="600" y1="0" x2="600" y2="400" stroke="#5c3a16" stroke-width="2.5"/>
-          <line x1="700" y1="0" x2="700" y2="400" stroke="#5c3a16" stroke-width="2.5"/>
+  <!-- THÔNG BÁO TRẠNG THÁI (THAY THẾ ALERT) -->
+  <div id="toastBanner" class="hidden fixed bottom-4 right-4 z-50 max-w-sm bg-stone-900 border border-amber-500/70 text-amber-100 px-4 py-3 rounded-2xl shadow-2xl text-sm flex items-start gap-2.5">
+    <span class="text-lg">🔔</span>
+    <div id="toastText" class="flex-1 leading-relaxed"></div>
+    <button onclick="hideToast()" class="text-stone-400 hover:text-white font-bold">✕</button>
+  </div>
 
-          <line x1="100" y1="500" x2="100" y2="900" stroke="#5c3a16" stroke-width="2.5"/>
-          <line x1="200" y1="500" x2="200" y2="900" stroke="#5c3a16" stroke-width="2.5"/>
-          <line x1="300" y1="500" x2="300" y2="900" stroke="#5c3a16" stroke-width="2.5"/>
-          <line x1="400" y1="500" x2="400" y2="900" stroke="#5c3a16" stroke-width="2.5"/>
-          <line x1="500" y1="500" x2="500" y2="900" stroke="#5c3a16" stroke-width="2.5"/>
-          <line x1="600" y1="500" x2="600" y2="900" stroke="#5c3a16" stroke-width="2.5"/>
-          <line x1="700" y1="500" x2="700" y2="900" stroke="#5c3a16" stroke-width="2.5"/>
+  <!-- NỘI DUNG CHÍNH: 3 CỘT TRÊN MÀN HÌNH LỚN, XẾP DỌC TRÊN ĐIỆN THOẠI -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 py-4 grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
 
-          <!-- Cung Tướng trên & dưới -->
-          <line x1="300" y1="0" x2="500" y2="200" stroke="#5c3a16" stroke-width="2.5"/>
-          <line x1="500" y1="0" x2="300" y2="200" stroke="#5c3a16" stroke-width="2.5"/>
-          <line x1="300" y1="700" x2="500" y2="900" stroke="#5c3a16" stroke-width="2.5"/>
-          <line x1="500" y1="700" x2="300" y2="900" stroke="#5c3a16" stroke-width="2.5"/>
+    <!-- CỘT TRÁI (4 CỘT): SẢNH TẠO PHÒNG CƯỢC / CÀI ĐẶT AI -->
+    <section class="lg:col-span-4 space-y-4">
 
-          <!-- Sở Hà - Hán Giới -->
-          <text x="200" y="463" fill="#5c3a16" font-size="38" font-family="serif" font-weight="bold" text-anchor="middle">楚 河</text>
-          <text x="600" y="463" fill="#5c3a16" font-size="38" font-family="serif" font-weight="bold" text-anchor="middle">漢 界</text>
-        </svg>
-        <div class="pieces-grid" id="boardGrid"></div>
-      </div>
-    </div>
+      <!-- PANEL CHẾ ĐỘ CHƠI VỚI NGƯỜI (PvP) -->
+      <div id="pvpPanel" class="bg-stone-900/90 border border-stone-800 rounded-2xl p-4 shadow-xl space-y-4">
+        <div class="flex items-center justify-between border-b border-stone-800 pb-2.5">
+          <h2 class="font-bold text-amber-400 text-sm sm:text-base">🏟️ Sảnh Tạo Phòng & Tìm Cờ Thủ</h2>
+          <span class="text-[11px] px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">Phí hủy phạt 20%</span>
+        </div>
 
-    <!-- BẢNG ĐIỀU KHIỂN CƯỢC & TRẠNG THÁI -->
-    <div class="side-panel">
-      <div class="card">
-        <h2>
-          <span>Thiết lập Ván Đấu CORE (1:1)</span>
-          <span id="matchIdTag" style="font-size:0.8rem; color:#9ca3af;">Chưa vào ván</span>
-        </h2>
+        <!-- Form tạo phòng mời đánh -->
+        <div class="bg-stone-950/80 p-3.5 rounded-xl border border-stone-800/80 space-y-3">
+          <p class="text-xs font-semibold text-stone-300">Tạo bàn cược mới & mời đối thủ:</p>
 
-        <div class="form-row">
-          <div>
-            <label for="betInput">Mức cược (0.01 - 1.00 CORE)</label>
-            <input type="number" id="betInput" min="0.01" max="1" step="0.01" value="0.05" />
+          <div class="grid grid-cols-2 gap-2.5">
+            <div>
+              <label class="block text-[11px] text-stone-400 mb-1">Mức cược (CORE)</label>
+              <input id="inputBetAmount" type="number" min="0.1" step="0.1" value="5"
+                class="w-full px-3 py-2 rounded-xl bg-stone-900 border border-stone-700 text-amber-300 font-bold text-sm focus:outline-none focus:border-amber-500" />
+            </div>
+            <div>
+              <label class="block text-[11px] text-stone-400 mb-1">Thời gian / nước</label>
+              <select id="selectTurnTime"
+                class="w-full px-3 py-2 rounded-xl bg-stone-900 border border-stone-700 text-stone-100 font-semibold text-sm focus:outline-none focus:border-amber-500">
+                <option value="15">15 giây / nước</option>
+                <option value="30" selected>30 giây / nước</option>
+                <option value="60">60 giây / nước</option>
+                <option value="90">90 giây / nước</option>
+              </select>
+            </div>
           </div>
+
+          <!-- Chọn nhanh mức cược phổ biến -->
+          <div class="flex flex-wrap gap-1.5">
+            <button type="button" onclick="setQuickBet(1)" class="px-2.5 py-1 rounded-lg bg-stone-800 hover:bg-stone-700 text-xs text-stone-300">1 CORE</button>
+            <button type="button" onclick="setQuickBet(5)" class="px-2.5 py-1 rounded-lg bg-stone-800 hover:bg-stone-700 text-xs text-amber-300 font-semibold">5 CORE</button>
+            <button type="button" onclick="setQuickBet(20)" class="px-2.5 py-1 rounded-lg bg-stone-800 hover:bg-stone-700 text-xs text-stone-300">20 CORE</button>
+            <button type="button" onclick="setQuickBet(50)" class="px-2.5 py-1 rounded-lg bg-stone-800 hover:bg-stone-700 text-xs text-stone-300">50 CORE</button>
+          </div>
+
+          <button id="btnCreateRoom" onclick="createPvPRoom()"
+            class="w-full py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-sm shadow-lg transition">
+            + Tạo Phòng & Treo Bảng Mời Đánh
+          </button>
+        </div>
+
+        <!-- Danh sách phòng đang chờ đối thủ -->
+        <div class="space-y-2">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold text-stone-300">Phòng Đang Mở (Bấm để vào kèo)</span>
+            <button onclick="renderRoomList()" class="text-[11px] text-amber-400 hover:underline">↻ Làm mới</button>
+          </div>
+          <div id="roomListContainer" class="space-y-2 max-h-64 overflow-y-auto pr-1">
+            <!-- Danh sách phòng render bằng JS -->
+          </div>
+        </div>
+      </div>
+
+      <!-- PANEL CHẾ ĐỘ CHƠI VỚI MÁY (AI) -->
+      <div id="aiPanel" class="hidden bg-stone-900/90 border border-stone-800 rounded-2xl p-4 shadow-xl space-y-4">
+        <div class="border-b border-stone-800 pb-2.5">
+          <h2 class="font-bold text-amber-400 text-sm sm:text-base">🤖 Luyện Tập Với Máy (AI)</h2>
+          <p class="text-xs text-stone-400 mt-0.5">Chơi miễn phí không tốn CORE để rèn chiến thuật trước khi vào sảnh cược.</p>
+        </div>
+
+        <div class="space-y-3">
           <div>
-            <label for="aiLevel">Độ khó AI</label>
-            <select id="aiLevel">
-              <option value="1">Cấp 1 - Dễ (Nhập môn)</option>
-              <option value="2" selected>Cấp 2 - Trung bình</option>
-              <option value="3">Cấp 3 - Khó (Tính sâu)</option>
+            <label class="block text-xs text-stone-300 mb-1.5 font-semibold">Độ khó của Máy:</label>
+            <select id="aiDifficulty" class="w-full px-3 py-2 rounded-xl bg-stone-950 border border-stone-700 text-sm text-amber-300 font-semibold">
+              <option value="1">Cấp 1 - Nhập Môn (Phản hồi nhanh)</option>
+              <option value="2" selected>Cấp 2 - Kỳ Thủ (Tính trước 2 nước)</option>
+              <option value="3">Cấp 3 - Cao Thủ (Tính sâu chiến thuật)</option>
             </select>
           </div>
-        </div>
 
-        <div class="quick-bets">
-          <button type="button" onclick="setBet(0.01)">0.01 CORE</button>
-          <button type="button" onclick="setBet(0.05)">0.05 CORE</button>
-          <button type="button" onclick="setBet(0.1)">0.10 CORE</button>
-          <button type="button" onclick="setBet(0.2)">0.20 CORE</button>
-          <button type="button" onclick="setBet(0.5)">0.50 CORE</button>
-        </div>
+          <div>
+            <label class="block text-xs text-stone-300 mb-1.5 font-semibold">Giới hạn giây mỗi nước (Luyện áp lực thời gian):</label>
+            <select id="aiTurnTime" class="w-full px-3 py-2 rounded-xl bg-stone-950 border border-stone-700 text-sm text-stone-200">
+              <option value="0">Không giới hạn thời gian</option>
+              <option value="15">15 giây / nước</option>
+              <option value="30" selected>30 giây / nước</option>
+              <option value="60">60 giây / nước</option>
+            </select>
+          </div>
 
-        <div class="actions">
-          <button class="btn-primary" id="btnStartMatch">Đặt Cược & Bắt Đầu</button>
-          <button class="btn-ghost" id="btnPractice">Chơi Thử Miễn Phí</button>
-          <button class="btn-green" id="btnClaimWin" style="display:none;">Nhận Thưởng (x2 CORE)</button>
-          <button class="btn-danger" id="btnCancelMatch" style="display:none;">Xin Hủy Ván (Hoàn Một Phần)</button>
+          <button onclick="startNewAIGame()" class="w-full py-2.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-stone-950 font-bold text-sm shadow transition">
+            ▶ Bắt Đầu Ván Mới Với Máy
+          </button>
         </div>
       </div>
 
-      <div class="card">
-        <h2>Diễn Biến & Luật Hủy Ván</h2>
-        <div class="status-box" id="statusText">
-          Kết nối ví OKX / MetaMask trên mạng <b>Core Mainnet (1116)</b>, chọn mức cược và bấm <b>Đặt Cược & Bắt Đầu</b>. Bạn cầm quân <b>Đỏ</b> đi trước.
+      <!-- THÔNG TIN VÁN ĐẤU & NÚT HỦY CHƠI CHỊU PHẠT % -->
+      <div class="bg-stone-900/90 border border-stone-800 rounded-2xl p-4 shadow-xl space-y-3">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-bold text-stone-400 uppercase">Trạng thái bàn đấu</span>
+          <span id="matchBadge" class="text-xs px-2.5 py-0.5 rounded-full bg-stone-800 text-amber-300 font-semibold">Sẵn sàng</span>
         </div>
 
-        <div class="stats-grid">
-          <div class="stat-item">
-            <div class="k">Lượt hiện tại</div>
-            <div class="v" id="turnLabel">Quân Đỏ (Bạn)</div>
+        <div class="grid grid-cols-2 gap-2 text-xs bg-stone-950/70 p-3 rounded-xl border border-stone-800">
+          <div>
+            <p class="text-stone-400">Tổng quỹ phòng:</p>
+            <p id="potDisplay" class="font-extrabold text-amber-400 text-sm mt-0.5">0 CORE</p>
           </div>
-          <div class="stat-item">
-            <div class="k">Quân Đỏ đã mất</div>
-            <div class="v" id="lostPiecesLabel">0 / 16</div>
+          <div>
+            <p class="text-stone-400">Luật thời gian:</p>
+            <p id="timeRuleDisplay" class="font-bold text-stone-200 text-sm mt-0.5">30s / nước</p>
           </div>
-          <div class="stat-item">
-            <div class="k">Hoàn nếu hủy</div>
-            <div class="v" id="refundPreviewLabel">90%</div>
+        </div>
+
+        <!-- Nút xin hủy chơi chịu phạt % -->
+        <button id="btnCancelGame" onclick="openCancelModal()" disabled
+          class="w-full py-2.5 px-3 rounded-xl bg-rose-950/70 hover:bg-rose-900/80 disabled:opacity-40 disabled:cursor-not-allowed border border-rose-700/50 text-rose-200 font-bold text-xs sm:text-sm transition">
+          🏳️ Xin Hủy Chơi (Chịu Phạt 20% Cược)
+        </button>
+      </div>
+    </section>
+
+    <!-- CỘT GIỮA (5 CỘT): BÀN CỜ TƯỚNG + ĐỒNG HỒ + NÚT "ĐÃ ĐÁNH XONG NƯỚC" -->
+    <section class="lg:col-span-5 flex flex-col items-center space-y-3">
+
+      <!-- Thanh thông tin đối thủ (Quân Đen) -->
+      <div class="w-full max-w-[460px] bg-stone-900/95 border border-stone-800 rounded-2xl px-4 py-2.5 flex items-center justify-between">
+        <div class="flex items-center gap-2.5">
+          <div class="w-9 h-9 rounded-full bg-stone-800 border-2 border-stone-500 flex items-center justify-center font-black hanzi text-stone-100">
+            將
           </div>
+          <div>
+            <p id="opponentName" class="text-xs sm:text-sm font-bold text-stone-200">Đối thủ (Quân Đen)</p>
+            <p id="opponentSub" class="text-[11px] text-stone-400">Đang chờ vào bàn...</p>
+          </div>
+        </div>
+        <div id="blackTimerBox" class="px-3 py-1 rounded-xl bg-stone-950 border border-stone-700 font-mono font-extrabold text-base text-stone-400">
+          00:30
         </div>
       </div>
 
-      <div class="card">
-        <h2>Cấu Hình Backend Ký Xác Nhận (Tùy Chọn)</h2>
-        <label for="workerUrlInput">URL API Ký Xác Nhận (Cloudflare / Netlify / Server)</label>
-        <input type="text" id="workerUrlInput" placeholder="https://your-signer-api.workers.dev" />
-        <p class="contract-meta" style="margin-top:8px;">
-          • Hợp đồng Escrow: <code>0xf32e9A38fb2238daAcd66FF228961Bf2D61166D8</code><br/>
-          • Ví Signer: <code>0xf4f2eb713d05e362c4788ba1658d09c0114e5433</code><br/>
-          • Mạng: <code>Core Blockchain Mainnet (Chain ID: 1116)</code>
-        </p>
+      <!-- BÀN CỜ TƯỚNG SVG + LƯỚI QUÂN CỜ TƯƠNG TÁC -->
+      <div class="w-full max-w-[460px] aspect-[9/10] board-wood rounded-2xl p-2 sm:p-3 relative select-none">
+        <div id="boardContainer" class="w-full h-full relative">
+          <!-- Nền kẻ ô bàn cờ vẽ bằng SVG sắc nét mọi kích thước -->
+          <svg viewBox="0 0 900 1000" class="w-full h-full pointer-events-none">
+            <rect x="50" y="50" width="800" height="900" fill="none" stroke="#4a280a" stroke-width="5" />
+            <!-- Các đường ngang -->
+            <g stroke="#4a280a" stroke-width="3">
+              <line x1="50" y1="150" x2="850" y2="150" />
+              <line x1="50" y1="250" x2="850" y2="250" />
+              <line x1="50" y1="350" x2="850" y2="350" />
+              <line x1="50" y1="450" x2="850" y2="450" />
+              <line x1="50" y1="550" x2="850" y2="550" />
+              <line x1="50" y1="650" x2="850" y2="650" />
+              <line x1="50" y1="750" x2="850" y2="750" />
+              <line x1="50" y1="850" x2="850" y2="850" />
+            </g>
+            <!-- Các đường dọc (ngắt ở Sở Hà - Hán Giới) -->
+            <g stroke="#4a280a" stroke-width="3">
+              <line x1="150" y1="50" x2="150" y2="450" />
+              <line x1="250" y1="50" x2="250" y2="450" />
+              <line x1="350" y1="50" x2="350" y2="450" />
+              <line x1="450" y1="50" x2="450" y2="450" />
+              <line x1="550" y1="50" x2="550" y2="450" />
+              <line x1="650" y1="50" x2="650" y2="450" />
+              <line x1="750" y1="50" x2="750" y2="450" />
+
+              <line x1="150" y1="550" x2="150" y2="950" />
+              <line x1="250" y1="550" x2="250" y2="950" />
+              <line x1="350" y1="550" x2="350" y2="950" />
+              <line x1="450" y1="550" x2="450" y2="950" />
+              <line x1="550" y1="550" x2="550" y2="950" />
+              <line x1="650" y1="550" x2="650" y2="950" />
+              <line x1="750" y1="550" x2="750" y2="950" />
+            </g>
+            <!-- Đường chéo cung Tướng -->
+            <g stroke="#4a280a" stroke-width="3">
+              <line x1="350" y1="50" x2="550" y2="250" />
+              <line x1="550" y1="50" x2="350" y2="250" />
+              <line x1="350" y1="750" x2="550" y2="950" />
+              <line x1="550" y1="750" x2="350" y2="950" />
+            </g>
+            <!-- Chữ Sở Hà - Hán Giới -->
+            <text x="250" y="515" fill="#4a280a" font-size="44" font-weight="bold" text-anchor="middle" class="hanzi">楚 河</text>
+            <text x="650" y="515" fill="#4a280a" font-size="44" font-weight="bold" text-anchor="middle" class="hanzi">漢 界</text>
+          </svg>
+
+          <!-- Lớp chứa các giao điểm click & quân cờ -->
+          <div id="piecesLayer" class="absolute inset-0"></div>
+        </div>
+      </div>
+
+      <!-- Thanh thông tin của bạn (Quân Đỏ) -->
+      <div class="w-full max-w-[460px] bg-stone-900/95 border border-amber-700/40 rounded-2xl px-4 py-2.5 flex items-center justify-between">
+        <div class="flex items-center gap-2.5">
+          <div class="w-9 h-9 rounded-full bg-red-900/80 border-2 border-red-400 flex items-center justify-center font-black hanzi text-red-100">
+            帥
+          </div>
+          <div>
+            <p id="playerName" class="text-xs sm:text-sm font-bold text-amber-300">Bạn (Quân Đỏ - Đi Tiên)</p>
+            <p id="turnHint" class="text-[11px] text-stone-300">Chọn quân Đỏ để di chuyển</p>
+          </div>
+        </div>
+        <div id="redTimerBox" class="px-3 py-1 rounded-xl bg-stone-950 border border-amber-500/60 font-mono font-extrabold text-base text-amber-400">
+          00:30
+        </div>
+      </div>
+
+      <!-- CỤM NÚT XÁC NHẬN NƯỚC ĐI ("ĐÃ ĐÁNH XONG NƯỚC" / "ĐI LẠI") -->
+      <div class="w-full max-w-[460px] grid grid-cols-3 gap-2.5">
+        <button id="btnUndoPending" onclick="undoPendingMove()" disabled
+          class="col-span-1 py-3 rounded-xl bg-stone-800 hover:bg-stone-700 disabled:opacity-40 disabled:cursor-not-allowed text-stone-200 font-bold text-xs sm:text-sm border border-stone-700 transition">
+          ↩ Chọn Lại
+        </button>
+        <button id="btnConfirmMove" onclick="confirmPlayerMove()" disabled
+          class="col-span-2 py-3 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 disabled:opacity-40 disabled:cursor-not-allowed text-stone-950 font-extrabold text-sm sm:text-base shadow-lg transition">
+          ✅ Đã Đánh Xong Nước
+        </button>
+      </div>
+    </section>
+
+    <!-- CỘT PHẢI (3 CỘT): KHUNG CHAT TRỰC TIẾP VỚI ĐỐI THỦ & NHẬT KÝ NƯỚC ĐI -->
+    <section class="lg:col-span-3 space-y-4">
+      <div class="bg-stone-900/90 border border-stone-800 rounded-2xl p-4 shadow-xl flex flex-col h-[520px]">
+        <div class="flex items-center justify-between border-b border-stone-800 pb-2.5 mb-2.5">
+          <h2 class="font-bold text-amber-400 text-sm">💬 Khung Chat Phòng Đấu</h2>
+          <span id="chatStatusDot" class="text-[11px] text-emerald-400">● Trực tuyến</span>
+        </div>
+
+        <!-- Danh sách tin nhắn -->
+        <div id="chatMessages" class="flex-1 overflow-y-auto space-y-2.5 pr-1 text-xs">
+          <div class="bg-stone-950/90 border border-stone-800 rounded-xl p-2.5 text-stone-400">
+            Hệ thống: Chào mừng kỳ thủ! Hãy tạo phòng cược hoặc chọn phòng ở sảnh để bắt đầu giao lưu.
+          </div>
+        </div>
+
+        <!-- Các nút chat nhanh 1 chạm -->
+        <div class="pt-2.5 mt-2 border-t border-stone-800">
+          <p class="text-[10px] text-stone-400 mb-1.5">Gửi nhanh:</p>
+          <div class="flex flex-wrap gap-1 mb-2">
+            <button type="button" onclick="sendQuickChat('Chào bạn, chúc ván cờ hay! 👋')" class="px-2 py-1 rounded-lg bg-stone-800 hover:bg-stone-700 text-[11px] text-stone-200">👋 Chào bạn</button>
+            <button type="button" onclick="sendQuickChat('Chiếu tướng rồi nhé! 🔥')" class="px-2 py-1 rounded-lg bg-stone-800 hover:bg-stone-700 text-[11px] text-amber-300">🔥 Chiếu tướng!</button>
+            <button type="button" onclick="sendQuickChat('Nước đi cao tay đấy! 👏')" class="px-2 py-1 rounded-lg bg-stone-800 hover:bg-stone-700 text-[11px] text-stone-200">👏 Nước hay!</button>
+            <button type="button" onclick="sendQuickChat('Sắp hết giờ rồi bạn ơi ⏳')" class="px-2 py-1 rounded-lg bg-stone-800 hover:bg-stone-700 text-[11px] text-stone-200">⏳ Sắp hết giờ</button>
+          </div>
+
+          <!-- Ô nhập tin nhắn tự do -->
+          <form onsubmit="handleChatSubmit(event)" class="flex gap-1.5">
+            <input id="chatInput" type="text" maxlength="140" placeholder="Nhập lời nhắn cho đối thủ..."
+              class="flex-1 px-3 py-2 rounded-xl bg-stone-950 border border-stone-700 text-xs text-stone-100 focus:outline-none focus:border-amber-500" />
+            <button type="submit" class="px-3 py-2 rounded-xl bg-amber-600 hover:bg-amber-500 text-stone-950 font-bold text-xs">
+              Gửi
+            </button>
+          </form>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- MODAL XÁC NHẬN HỦY CHƠI CHỊU PHẠT % (THAY THẾ CONFIRM) -->
+  <div id="cancelModal" class="hidden fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-stone-900 border border-rose-500/50 rounded-2xl max-w-md w-full p-5 shadow-2xl space-y-4">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-full bg-rose-500/20 text-rose-400 flex items-center justify-center text-xl">⚠️</div>
+        <div>
+          <h3 class="font-extrabold text-base text-rose-300">Xác Nhận Xin Hủy Ván Đấu</h3>
+          <p class="text-xs text-stone-400">Áp dụng quy tắc phạt 20% tiền cược của người xin dừng</p>
+        </div>
+      </div>
+
+      <div id="cancelBreakdown" class="bg-stone-950 border border-stone-800 rounded-xl p-3.5 text-xs space-y-1.5 text-stone-300">
+        <!-- Chi tiết tính tiền phạt render tự động -->
+      </div>
+
+      <div class="flex justify-end gap-2.5 pt-1">
+        <button onclick="closeCancelModal()" class="px-4 py-2 rounded-xl bg-stone-800 hover:bg-stone-700 text-xs font-bold text-stone-200">
+          Quay Lại Đánh Tiếp
+        </button>
+        <button onclick="executeCancelWithPenalty()" class="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-xs font-extrabold text-white">
+          Chấp Nhận Phạt & Hủy Ván
+        </button>
       </div>
     </div>
   </div>
 
-<script>
-  // ================= CẤU HÌNH BLOCKCHAIN CORE MAINNET =================
-  const CONTRACT_ADDRESS = "0xf32e9A38fb2238daAcd66FF228961Bf2D61166D8";
-  const SIGNER_ADDRESS   = "0xf4f2eb713d05e362c4788ba1658d09c0114e5433";
-  const CORE_CHAIN_ID_DEC = 1116;
-  const CORE_CHAIN_ID_HEX = "0x45c";
-
-  const CORE_NETWORK_PARAMS = {
-    chainId: CORE_CHAIN_ID_HEX,
-    chainName: "Core Blockchain Mainnet",
-    nativeCurrency: { name: "CORE", symbol: "CORE", decimals: 18 },
-    rpcUrls: ["https://rpc.coredao.org"],
-    blockExplorerUrls: ["https://scan.coredao.org"]
-  };
-
-  const CONTRACT_ABI = [
-    "function startMatch() external payable returns (uint256)",
-    "function claimWin(uint256 matchId, bytes calldata signature) external",
-    "function cancelMatch(uint256 matchId, uint256 refundAmount, bytes calldata signature) external",
-    "function nextMatchId() external view returns (uint256)",
-    "function minBet() external view returns (uint256)",
-    "function maxBet() external view returns (uint256)",
-    "function matches(uint256) external view returns (address player, uint256 bet, bool settled)",
-    "event MatchStarted(uint256 indexed matchId, address indexed player, uint256 bet)",
-    "event MatchWon(uint256 indexed matchId, address indexed player, uint256 payout)",
-    "event MatchCancelled(uint256 indexed matchId, address indexed player, uint256 refundAmount)"
-  ];
-
-  // ================= TRẠNG THÁI WEB3 & VÁN ĐẤU =================
-  let provider = null;
-  let signer = null;
-  let contract = null;
-  let userAddress = null;
-
-  let activeMatch = null; // { matchId, betWei, isPractice, status: 'playing'|'won'|'lost'|'cancelled' }
-
-  const STORAGE_KEY = "cotuong_core_web3_state_v1";
-
-  // ================= KHỞI TẠO BÀN CỜ TƯỚNG =================
-  // Ký hiệu: R=Xe, N=Mã, B=Tượng, A=Sĩ, K=Tướng, C=Pháo, P=Tốt
-  // Chữ HOA = ĐỎ (Người chơi), chữ thường = ĐEN (AI)
-  const INITIAL_BOARD = [
-    ["r","n","b","a","k","a","b","n","r"],
-    ["","","","","","","","",""],
-    ["","c","","","","","","c",""],
-    ["p","","p","","p","","p","","p"],
-    ["","","","","","","","",""],
-    ["","","","","","","","",""],
-    ["P","","P","","P","","P","","P"],
-    ["","C","","","","","","C",""],
-    ["","","","","","","","",""],
-    ["R","N","B","A","K","A","B","N","R"]
-  ];
-
-  const PIECE_LABELS = {
-    K: "帥", A: "仕", B: "相", N: "傌", R: "俥", C: "炮", P: "兵",
-    k: "將", a: "士", b: "象", n: "馬", r: "車", c: "砲", p: "卒"
-  };
-
-  const PIECE_VALUES = {
-    k: 10000, r: 900, c: 450, n: 400, b: 200, a: 200, p: 100
-  };
-
-  let board = cloneBoard(INITIAL_BOARD);
-  let turn = "red"; // 'red' | 'black'
-  let selectedCell = null;
-  let validMoves = [];
-  let lastMove = null;
-  let gameOver = false;
-
-  function cloneBoard(b) {
-    return b.map(row => [...row]);
-  }
-
-  function isRed(p) { return p && p === p.toUpperCase(); }
-  function isBlack(p) { return p && p === p.toLowerCase(); }
-  function sameSide(p1, p2) {
-    if (!p1 || !p2) return false;
-    return isRed(p1) === isRed(p2);
-  }
-
-  function countRedLost() {
-    let redCount = 0;
-    for (let r = 0; r < 10; r++) {
-      for (let c = 0; c < 9; c++) {
-        if (isRed(board[r][c])) redCount++;
-      }
-    }
-    return Math.max(0, 16 - redCount);
-  }
-
-  function calcRefundPercent(lost) {
-    return Math.max(10, 90 - Math.min(16, lost) * 5);
-  }
-
-  function saveState() {
-    const payload = {
-      board,
-      turn,
-      lastMove,
-      gameOver,
-      activeMatch,
-      workerUrl: document.getElementById("workerUrlInput").value.trim()
-    };
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
-  }
-
-  function loadState() {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (!raw) return;
-      const saved = JSON.parse(raw);
-      if (saved.workerUrl) {
-        document.getElementById("workerUrlInput").value = saved.workerUrl;
-      }
-      if (saved.board && Array.isArray(saved.board)) {
-        board = saved.board;
-        turn = saved.turn || "red";
-        lastMove = saved.lastMove || null;
-        gameOver = Boolean(saved.gameOver);
-        activeMatch = saved.activeMatch || null;
-      }
-    } catch (e) {
-      console.warn("Không đọc được trạng thái lưu:", e);
-    }
-  }
-
-  // ================= LUẬT DI CHUYỂN CỜ TƯỚNG =================
-  function getPseudoMoves(b, r, c) {
-    const p = b[r][c];
-    if (!p) return [];
-    const red = isRed(p);
-    const type = p.toLowerCase();
-    const moves = [];
-
-    const addIfValid = (nr, nc) => {
-      if (nr < 0 || nr > 9 || nc < 0 || nc > 8) return false;
-      const target = b[nr][nc];
-      if (target && sameSide(p, target)) return false;
-      moves.push([nr, nc]);
-      return !target;
+  <script>
+    // =========================================================================
+    // 1. CẤU HÌNH MẠNG CORE MAINNET & HỢP ĐỒNG KÝ QUỸ (CẬP NHẬT KHI DEPLOY MỚI)
+    // =========================================================================
+    const CONFIG = {
+      CHAIN_ID_HEX: "0x45c", // 1116 - Core Blockchain Mainnet
+      CHAIN_NAME: "Core Blockchain Mainnet",
+      RPC_URL: "https://rpc.coredao.org",
+      EXPLORER_URL: "https://scan.coredao.org",
+      // Địa chỉ hợp đồng CoTuongPvP.sol sau khi anh deploy trên Remix
+      PVP_CONTRACT_ADDRESS: "0x0000000000000000000000000000000000000000",
+      SIGNER_API_URL: "https://cotuong-signer-api.netlify.app/.netlify/functions/sign",
+      PENALTY_PERCENT: 20
     };
 
-    if (type === "r") {
-      // Xe
-      for (let nr = r - 1; nr >= 0; nr--) if (!addIfValid(nr, c)) break;
-      for (let nr = r + 1; nr <= 9; nr++) if (!addIfValid(nr, c)) break;
-      for (let nc = c - 1; nc >= 0; nc--) if (!addIfValid(r, nc)) break;
-      for (let nc = c + 1; nc <= 8; nc++) if (!addIfValid(r, nc)) break;
-    } else if (type === "c") {
-      // Pháo
-      const dirs = [[-1,0],[1,0],[0,-1],[0,1]];
-      for (const [dr, dc] of dirs) {
-        let nr = r + dr, nc = c + dc;
-        let jumped = false;
-        while (nr >= 0 && nr <= 9 && nc >= 0 && nc <= 8) {
-          const t = b[nr][nc];
-          if (!jumped) {
-            if (!t) moves.push([nr, nc]);
-            else jumped = true;
-          } else {
-            if (t) {
-              if (!sameSide(p, t)) moves.push([nr, nc]);
-              break;
-            }
-          }
-          nr += dr; nc += dc;
-        }
-      }
-    } else if (type === "n") {
-      // Mã (có cản chân)
-      const steps = [
-        [-2,-1,-1,0], [-2,1,-1,0],
-        [2,-1,1,0],   [2,1,1,0],
-        [-1,-2,0,-1], [1,-2,0,-1],
-        [-1,2,0,1],   [1,2,0,1]
-      ];
-      for (const [dr, dc, lr, lc] of steps) {
-        const legR = r + lr, legC = c + lc;
-        if (legR >= 0 && legR <= 9 && legC >= 0 && legC <= 8 && !b[legR][legC]) {
-          addIfValid(r + dr, c + dc);
-        }
-      }
-    } else if (type === "b") {
-      // Tượng (không qua sông, có cản mắt tượng)
-      const steps = [[-2,-2,-1,-1], [-2,2,-1,1], [2,-2,1,-1], [2,2,1,1]];
-      for (const [dr, dc, er, ec] of steps) {
-        const nr = r + dr, nc = c + dc;
-        if (red && nr < 5) continue;
-        if (!red && nr > 4) continue;
-        if (nr >= 0 && nr <= 9 && nc >= 0 && nc <= 8 && !b[r + er][c + ec]) {
-          addIfValid(nr, nc);
-        }
-      }
-    } else if (type === "a") {
-      // Sĩ (trong cung)
-      const steps = [[-1,-1], [-1,1], [1,-1], [1,1]];
-      for (const [dr, dc] of steps) {
-        const nr = r + dr, nc = c + dc;
-        if (nc < 3 || nc > 5) continue;
-        if (red && (nr < 7 || nr > 9)) continue;
-        if (!red && (nr < 0 || nr > 2)) continue;
-        addIfValid(nr, nc);
-      }
-    } else if (type === "k") {
-      // Tướng (trong cung)
-      const steps = [[-1,0], [1,0], [0,-1], [0,1]];
-      for (const [dr, dc] of steps) {
-        const nr = r + dr, nc = c + dc;
-        if (nc < 3 || nc > 5) continue;
-        if (red && (nr < 7 || nr > 9)) continue;
-        if (!red && (nr < 0 || nr > 2)) continue;
-        addIfValid(nr, nc);
-      }
-    } else if (type === "p") {
-      // Tốt
-      if (red) {
-        addIfValid(r - 1, c);
-        if (r <= 4) {
-          addIfValid(r, c - 1);
-          addIfValid(r, c + 1);
-        }
-      } else {
-        addIfValid(r + 1, c);
-        if (r >= 5) {
-          addIfValid(r, c - 1);
-          addIfValid(r, c + 1);
-        }
-      }
+    const PVP_ABI = [
+      "function createRoom(uint256 _turnSeconds) external payable returns (uint256)",
+      "function joinRoom(uint256 _roomId) external payable",
+      "function closeOpenRoom(uint256 _roomId) external",
+      "function claimWin(uint256 _roomId, address _winner, bytes calldata _signature) external",
+      "function cancelPlayingGame(uint256 _roomId, address _canceller, bytes calldata _signature) external"
+    ];
+
+    // =========================================================================
+    // 2. TRẠNG THÁI ỨNG DỤNG, SẢNH PHÒNG & BÀN CỜ TƯỚNG
+    // =========================================================================
+    let userAddress = null;
+    let provider = null;
+    let signer = null;
+    let gameMode = "pvp"; // 'pvp' hoặc 'ai'
+
+    // Trạng thái phòng hiện tại
+    let currentRoom = null;
+    let openRooms = [
+      { id: 101, host: "0x8a3F...91C4", bet: 5, turnSeconds: 30, status: "Open" },
+      { id: 102, host: "0x3c1B...44E9", bet: 2, turnSeconds: 60, status: "Open" },
+      { id: 103, host: "0x9d7E...12A0", bet: 10, turnSeconds: 15, status: "Open" }
+    ];
+
+    // Bàn cờ 10 hàng x 9 cột
+    // Chữ HOA = Quân Đỏ (người chơi), chữ thường = Quân Đen (đối thủ / AI)
+    // R/r: Xe, N/n: Mã, B/b: Tượng, A/a: Sĩ, K/k: Tướng, C/c: Pháo, P/p: Tốt
+    const PIECE_LABELS = {
+      R: "俥", N: "傌", B: "相", A: "仕", K: "帥", C: "炮", P: "兵",
+      r: "車", n: "馬", b: "象", a: "士", k: "將", c: "砲", p: "卒"
+    };
+
+    const PIECE_VALUES = {
+      k: 10000, K: 10000,
+      r: 90, R: 90,
+      c: 45, C: 45,
+      n: 40, N: 40,
+      b: 20, B: 20,
+      a: 20, A: 20,
+      p: 10, P: 10
+    };
+
+    let board = [];
+    let currentTurn = "red"; // 'red' hoặc 'black'
+    let gameActive = false;
+    let selectedCell = null; // { r, c }
+    let pendingMove = null;  // { fromR, fromC, toR, toC, captured } - nước đi chờ bấm "Đã Đánh Xong Nước"
+    let turnDuration = 30;
+    let timeLeft = 30;
+    let timerInterval = null;
+
+    // =========================================================================
+    // 3. TIỆN ÍCH THÔNG BÁO & KẾT NỐI VÍ WEB3 (OKX / METAMASK)
+    // =========================================================================
+    function showToast(msg) {
+      const banner = document.getElementById("toastBanner");
+      document.getElementById("toastText").textContent = msg;
+      banner.classList.remove("hidden");
     }
 
-    return moves;
-  }
-
-  function findKing(b, redSide) {
-    const target = redSide ? "K" : "k";
-    for (let r = 0; r < 10; r++) {
-      for (let c = 0; c < 9; c++) {
-        if (b[r][c] === target) return [r, c];
-      }
-    }
-    return null;
-  }
-
-  function kingsFacing(b) {
-    const rk = findKing(b, true);
-    const bk = findKing(b, false);
-    if (!rk || !bk || rk[1] !== bk[1]) return false;
-    const col = rk[1];
-    for (let r = bk[0] + 1; r < rk[0]; r++) {
-      if (b[r][col]) return false;
-    }
-    return true;
-  }
-
-  function isInCheck(b, redSide) {
-    if (kingsFacing(b)) return true;
-    const kingPos = findKing(b, redSide);
-    if (!kingPos) return true;
-    for (let r = 0; r < 10; r++) {
-      for (let c = 0; c < 9; c++) {
-        const p = b[r][c];
-        if (!p || isRed(p) === redSide) continue;
-        const moves = getPseudoMoves(b, r, c);
-        for (const [mr, mc] of moves) {
-          if (mr === kingPos[0] && mc === kingPos[1]) return true;
-        }
-      }
-    }
-    return false;
-  }
-
-  function getLegalMoves(b, r, c) {
-    const p = b[r][c];
-    if (!p) return [];
-    const redSide = isRed(p);
-    const pseudo = getPseudoMoves(b, r, c);
-    return pseudo.filter(([nr, nc]) => {
-      const nb = cloneBoard(b);
-      nb[nr][nc] = p;
-      nb[r][c] = "";
-      return !isInCheck(nb, redSide);
-    });
-  }
-
-  function hasAnyLegalMove(b, redSide) {
-    for (let r = 0; r < 10; r++) {
-      for (let c = 0; c < 9; c++) {
-        const p = b[r][c];
-        if (p && isRed(p) === redSide) {
-          if (getLegalMoves(b, r, c).length > 0) return true;
-        }
-      }
-    }
-    return false;
-  }
-
-  // ================= AI MINIMAX + ALPHA-BETA =================
-  function evaluateBoard(b) {
-    let score = 0;
-    for (let r = 0; r < 10; r++) {
-      for (let c = 0; c < 9; c++) {
-        const p = b[r][c];
-        if (!p) continue;
-        let val = PIECE_VALUES[p.toLowerCase()] || 0;
-        if (p === "p" && r >= 5) val += 40;
-        if (p === "P" && r <= 4) val += 40;
-        score += isBlack(p) ? val : -val;
-      }
-    }
-    return score;
-  }
-
-  function getAllMoves(b, redSide) {
-    const list = [];
-    for (let r = 0; r < 10; r++) {
-      for (let c = 0; c < 9; c++) {
-        const p = b[r][c];
-        if (p && isRed(p) === redSide) {
-          const moves = getLegalMoves(b, r, c);
-          for (const [nr, nc] of moves) {
-            list.push({ fr: r, fc: c, tr: nr, tc: nc, capture: Boolean(b[nr][nc]) });
-          }
-        }
-      }
-    }
-    list.sort((a, b) => Number(b.capture) - Number(a.capture));
-    return list;
-  }
-
-  function minimax(b, depth, alpha, beta, maximizingBlack) {
-    if (depth === 0) return evaluateBoard(b);
-    const moves = getAllMoves(b, !maximizingBlack);
-    if (moves.length === 0) {
-      return maximizingBlack ? -99999 : 99999;
+    function hideToast() {
+      document.getElementById("toastBanner").classList.add("hidden");
     }
 
-    if (maximizingBlack) {
-      let best = -Infinity;
-      for (const m of moves) {
-        const nb = cloneBoard(b);
-        nb[m.tr][m.tc] = nb[m.fr][m.fc];
-        nb[m.fr][m.fc] = "";
-        const val = minimax(nb, depth - 1, alpha, beta, false);
-        best = Math.max(best, val);
-        alpha = Math.max(alpha, val);
-        if (beta <= alpha) break;
-      }
-      return best;
-    } else {
-      let best = Infinity;
-      for (const m of moves) {
-        const nb = cloneBoard(b);
-        nb[m.tr][m.tc] = nb[m.fr][m.fc];
-        nb[m.fr][m.fc] = "";
-        const val = minimax(nb, depth - 1, alpha, beta, true);
-        best = Math.min(best, val);
-        beta = Math.min(beta, val);
-        if (beta <= alpha) break;
-      }
-      return best;
-    }
-  }
-
-  function makeAIMove() {
-    if (gameOver || turn !== "black") return;
-    const level = Number(document.getElementById("aiLevel").value) || 2;
-    const moves = getAllMoves(board, false);
-
-    if (moves.length === 0) {
-      handlePlayerWin();
-      return;
+    function shortAddr(addr) {
+      if (!addr) return "Khách";
+      if (addr.includes("...")) return addr;
+      return addr.slice(0, 6) + "..." + addr.slice(-4);
     }
 
-    let chosen = moves[0];
-    if (level === 1) {
-      // Cấp 1: ưu tiên ăn quân nhẹ + ngẫu nhiên
-      const captures = moves.filter(m => m.capture);
-      if (captures.length > 0 && Math.random() < 0.65) {
-        chosen = captures[Math.floor(Math.random() * captures.length)];
-      } else {
-        chosen = moves[Math.floor(Math.random() * moves.length)];
-      }
-    } else {
-      const depth = level === 2 ? 2 : 3;
-      let bestScore = -Infinity;
-      let bestMoves = [];
-      for (const m of moves) {
-        const nb = cloneBoard(board);
-        nb[m.tr][m.tc] = nb[m.fr][m.fc];
-        nb[m.fr][m.fc] = "";
-        const score = minimax(nb, depth - 1, -Infinity, Infinity, false);
-        if (score > bestScore) {
-          bestScore = score;
-          bestMoves = [m];
-        } else if (score === bestScore) {
-          bestMoves.push(m);
-        }
-      }
-      chosen = bestMoves[Math.floor(Math.random() * bestMoves.length)];
-    }
-
-    board[chosen.tr][chosen.tc] = board[chosen.fr][chosen.fc];
-    board[chosen.fr][chosen.fc] = "";
-    lastMove = { fr: chosen.fr, fc: chosen.fc, tr: chosen.tr, tc: chosen.tc };
-
-    if (!hasAnyLegalMove(board, true)) {
-      gameOver = true;
-      if (activeMatch) activeMatch.status = "lost";
-      setStatus("❌ Bạn đã bị chiếu bí! AI giành chiến thắng ván này.");
-    } else {
-      turn = "red";
-      const checkMsg = isInCheck(board, true) ? " ⚠️ Tướng Đỏ đang bị CHIẾU!" : "";
-      setStatus("Đến lượt bạn (Quân Đỏ)." + checkMsg);
-    }
-
-    renderBoard();
-    updateUI();
-    saveState();
-  }
-
-  function handlePlayerWin() {
-    gameOver = true;
-    if (activeMatch) {
-      activeMatch.status = "won";
-    }
-    if (activeMatch && !activeMatch.isPractice) {
-      setStatus("🎉 CHÚC MỪNG! Bạn đã thắng AI. Bấm nút xanh <b>Nhận Thưởng (x2 CORE)</b> để rút thưởng về ví.");
-    } else {
-      setStatus("🎉 CHÚC MỪNG! Bạn đã thắng AI ở chế độ chơi thử miễn phí.");
-    }
-    renderBoard();
-    updateUI();
-    saveState();
-  }
-
-  // ================= RENDER GIAO DIỆN BÀN CỜ =================
-  function renderBoard() {
-    const grid = document.getElementById("boardGrid");
-    grid.innerHTML = "";
-
-    for (let r = 0; r < 10; r++) {
-      for (let c = 0; c < 9; c++) {
-        const cell = document.createElement("div");
-        cell.className = "cell";
-
-        if (lastMove && ((lastMove.fr === r && lastMove.fc === c) || (lastMove.tr === r && lastMove.tc === c))) {
-          cell.classList.add("last-move");
-        }
-
-        if (validMoves.some(([mr, mc]) => mr === r && mc === c)) {
-          cell.classList.add("valid-target");
-        }
-
-        const p = board[r][c];
-        if (p) {
-          const pieceEl = document.createElement("div");
-          pieceEl.className = "piece " + (isRed(p) ? "red" : "black");
-          if (selectedCell && selectedCell[0] === r && selectedCell[1] === c) {
-            pieceEl.classList.add("selected");
-          }
-          pieceEl.textContent = PIECE_LABELS[p] || p;
-          cell.appendChild(pieceEl);
-        }
-
-        cell.addEventListener("click", () => onCellClick(r, c));
-        grid.appendChild(cell);
-      }
-    }
-  }
-
-  function onCellClick(r, c) {
-    if (gameOver || turn !== "red") return;
-    if (!activeMatch || activeMatch.status !== "playing") {
-      setStatus("⚠️ Hãy bấm <b>Đặt Cược & Bắt Đầu</b> hoặc <b>Chơi Thử Miễn Phí</b> trước khi đi quân.");
-      return;
-    }
-
-    const clickedPiece = board[r][c];
-
-    if (selectedCell) {
-      const [sr, sc] = selectedCell;
-      const isTarget = validMoves.some(([mr, mc]) => mr === r && mc === c);
-
-      if (isTarget) {
-        board[r][c] = board[sr][sc];
-        board[sr][sc] = "";
-        lastMove = { fr: sr, fc: sc, tr: r, tc: c };
-        selectedCell = null;
-        validMoves = [];
-
-        if (!hasAnyLegalMove(board, false)) {
-          handlePlayerWin();
-          return;
-        }
-
-        turn = "black";
-        setStatus("🤖 AI đang suy nghĩ nước đi...");
-        renderBoard();
-        updateUI();
-        saveState();
-
-        setTimeout(makeAIMove, 260);
+    async function connectWallet() {
+      const injected = window.okxwallet || window.ethereum;
+      if (!injected) {
+        showToast("Không tìm thấy ví OKX Wallet hoặc MetaMask. Bạn vẫn có thể chơi thử với Máy hoặc test giao diện phòng!");
         return;
       }
-    }
 
-    if (clickedPiece && isRed(clickedPiece)) {
-      selectedCell = [r, c];
-      validMoves = getLegalMoves(board, r, c);
-    } else {
-      selectedCell = null;
-      validMoves = [];
-    }
+      try {
+        provider = new ethers.BrowserProvider(injected);
+        await provider.send("eth_requestAccounts", []);
 
-    renderBoard();
-  }
-
-  // ================= KẾT NỐI VÍ & TƯƠNG TÁC SMART CONTRACT =================
-  function setBet(val) {
-    document.getElementById("betInput").value = val;
-  }
-
-  function setStatus(html) {
-    document.getElementById("statusText").innerHTML = html;
-  }
-
-  function updateUI() {
-    const lost = countRedLost();
-    const refundPct = calcRefundPercent(lost);
-
-    document.getElementById("turnLabel").textContent = gameOver
-      ? "Kết thúc"
-      : (turn === "red" ? "Quân Đỏ (Bạn)" : "Quân Đen (AI)");
-    document.getElementById("lostPiecesLabel").textContent = `${lost} / 16`;
-    document.getElementById("refundPreviewLabel").textContent = `${refundPct}%`;
-
-    const btnClaim = document.getElementById("btnClaimWin");
-    const btnCancel = document.getElementById("btnCancelMatch");
-    const matchTag = document.getElementById("matchIdTag");
-
-    if (!activeMatch) {
-      matchTag.textContent = "Chưa vào ván";
-      btnClaim.style.display = "none";
-      btnCancel.style.display = "none";
-      return;
-    }
-
-    if (activeMatch.isPractice) {
-      matchTag.textContent = "Chế độ Chơi Thử";
-      btnClaim.style.display = "none";
-      btnCancel.style.display = activeMatch.status === "playing" ? "inline-block" : "none";
-      btnCancel.textContent = "Kết Thúc Chơi Thử";
-      return;
-    }
-
-    const betCore = ethers.formatEther(activeMatch.betWei);
-    matchTag.textContent = `Ván #${activeMatch.matchId} • Cược ${betCore} CORE`;
-
-    btnClaim.style.display = activeMatch.status === "won" ? "inline-block" : "none";
-    btnCancel.style.display = activeMatch.status === "playing" ? "inline-block" : "none";
-    btnCancel.textContent = `Xin Hủy Ván (Hoàn ${refundPct}%)`;
-  }
-
-  async function refreshBalances() {
-    try {
-      const rpcProvider = new ethers.JsonRpcProvider("https://rpc.coredao.org");
-      const poolBal = await rpcProvider.getBalance(CONTRACT_ADDRESS);
-      document.getElementById("poolBalancePill").textContent =
-        `Quỹ nhà cái: ${Number(ethers.formatEther(poolBal)).toFixed(4)} CORE`;
-
-      if (provider && userAddress) {
-        const uBal = await provider.getBalance(userAddress);
-        const shortAddr = `${userAddress.slice(0, 6)}...${userAddress.slice(-4)}`;
-        document.getElementById("walletBalancePill").textContent =
-          `${shortAddr} • ${Number(ethers.formatEther(uBal)).toFixed(4)} CORE`;
-      }
-    } catch (e) {
-      console.warn("Lỗi tải số dư:", e);
-    }
-  }
-
-  async function connectWallet() {
-    const eth = window.okxwallet || window.ethereum;
-    if (!eth) {
-      alert("Không tìm thấy ví Web3 (OKX Wallet hoặc MetaMask). Vui lòng cài tiện ích ví trên trình duyệt.");
-      return;
-    }
-
-    try {
-      await eth.request({ method: "eth_requestAccounts" });
-      const chainIdHex = await eth.request({ method: "eth_chainId" });
-
-      if (parseInt(chainIdHex, 16) !== CORE_CHAIN_ID_DEC) {
+        // Chuyển sang mạng Core Mainnet (1116)
         try {
-          await eth.request({
+          await injected.request({
             method: "wallet_switchEthereumChain",
-            params: [{ chainId: CORE_CHAIN_ID_HEX }]
+            params: [{ chainId: CONFIG.CHAIN_ID_HEX }]
           });
         } catch (switchErr) {
           if (switchErr.code === 4902) {
-            await eth.request({
+            await injected.request({
               method: "wallet_addEthereumChain",
-              params: [CORE_NETWORK_PARAMS]
+              params: [{
+                chainId: CONFIG.CHAIN_ID_HEX,
+                chainName: CONFIG.CHAIN_NAME,
+                rpcUrls: [CONFIG.RPC_URL],
+                nativeCurrency: { name: "CORE", symbol: "CORE", decimals: 18 },
+                blockExplorerUrls: [CONFIG.EXPLORER_URL]
+              }]
             });
-          } else {
-            throw switchErr;
           }
+        }
+
+        signer = await provider.getSigner();
+        userAddress = await signer.getAddress();
+        const balWei = await provider.getBalance(userAddress);
+        const balCore = parseFloat(ethers.formatEther(balWei)).toFixed(3);
+
+        document.getElementById("btnConnectWallet").textContent = shortAddr(userAddress);
+        document.getElementById("walletBalance").textContent = `${balCore} CORE`;
+        document.getElementById("walletBalanceBox").classList.remove("hidden");
+        document.getElementById("playerName").textContent = `${shortAddr(userAddress)} (Quân Đỏ)`;
+
+        showToast(`Đã kết nối ví ${shortAddr(userAddress)} trên mạng Core Mainnet!`);
+      } catch (err) {
+        showToast("Lỗi kết nối ví: " + (err.message || "Người dùng từ chối"));
+      }
+    }
+
+    // =========================================================================
+    // 4. CHUYỂN CHẾ ĐỘ CHƠI (CHƠI VỚI NGƯỜI / CHƠI VỚI MÁY)
+    // =========================================================================
+    function switchGameMode(mode) {
+      gameMode = mode;
+      const tabPvP = document.getElementById("tabPvP");
+      const tabAI = document.getElementById("tabAI");
+      const pvpPanel = document.getElementById("pvpPanel");
+      const aiPanel = document.getElementById("aiPanel");
+
+      if (mode === "pvp") {
+        tabPvP.className = "px-3 py-1.5 rounded-lg text-xs sm:text-sm font-bold bg-amber-600 text-white transition";
+        tabAI.className = "px-3 py-1.5 rounded-lg text-xs sm:text-sm font-bold text-stone-300 hover:text-white transition";
+        pvpPanel.classList.remove("hidden");
+        aiPanel.classList.add("hidden");
+        addChatSystem("Đã chuyển sang chế độ Đấu Với Người (PvP Cược CORE).");
+      } else {
+        tabAI.className = "px-3 py-1.5 rounded-lg text-xs sm:text-sm font-bold bg-amber-600 text-white transition";
+        tabPvP.className = "px-3 py-1.5 rounded-lg text-xs sm:text-sm font-bold text-stone-300 hover:text-white transition";
+        aiPanel.classList.remove("hidden");
+        pvpPanel.classList.add("hidden");
+        startNewAIGame();
+      }
+    }
+
+    function setQuickBet(val) {
+      document.getElementById("inputBetAmount").value = val;
+    }
+
+    // =========================================================================
+    // 5. QUẢN LÝ PHÒNG CƯỢC PvP & HỦY CHƠI CHỊU PHẠT %
+    // =========================================================================
+    function renderRoomList() {
+      const box = document.getElementById("roomListContainer");
+      box.innerHTML = "";
+
+      if (openRooms.length === 0) {
+        box.innerHTML = `<p class="text-xs text-stone-500 text-center py-4">Chưa có phòng nào đang chờ. Hãy tạo phòng mới!</p>`;
+        return;
+      }
+
+      openRooms.forEach((room) => {
+        const div = document.createElement("div");
+        div.className = "bg-stone-950/90 border border-stone-800 hover:border-amber-600/60 rounded-xl p-3 flex items-center justify-between gap-2 transition";
+        div.innerHTML = `
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="text-xs font-extrabold text-amber-400">Phòng #${room.id}</span>
+              <span class="text-[11px] px-2 py-0.5 rounded bg-stone-800 text-stone-300">⏱ ${room.turnSeconds}s/nước</span>
+            </div>
+            <p class="text-[11px] text-stone-400 mt-1">Chủ bàn: <span class="text-stone-200 font-semibold">${room.host}</span></p>
+          </div>
+          <div class="text-right">
+            <p class="text-xs font-extrabold text-emerald-400 mb-1">Cược: ${room.bet} CORE</p>
+            <button onclick="joinPvPRoom(${room.id})"
+              class="px-3 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-500 text-stone-950 font-extrabold text-xs transition">
+              Vào Đánh
+            </button>
+          </div>
+        `;
+        box.appendChild(div);
+      });
+    }
+
+    async function createPvPRoom() {
+      const bet = parseFloat(document.getElementById("inputBetAmount").value);
+      const turnSec = parseInt(document.getElementById("selectTurnTime").value, 10);
+
+      if (isNaN(bet) || bet < 0.1) {
+        showToast("Mức cược tối thiểu là 0.1 CORE.");
+        return;
+      }
+
+      // Nếu đã deploy contract thật, gọi hàm createRoom trên Smart Contract
+      if (signer && CONFIG.PVP_CONTRACT_ADDRESS !== "0x0000000000000000000000000000000000000000") {
+        try {
+          showToast("Đang gửi giao dịch tạo phòng & khóa cược lên ví Web3...");
+          const contract = new ethers.Contract(CONFIG.PVP_CONTRACT_ADDRESS, PVP_ABI, signer);
+          const tx = await contract.createRoom(turnSec, { value: ethers.parseEther(String(bet)) });
+          await tx.wait();
+        } catch (err) {
+          showToast("Tạo phòng trên chuỗi thất bại: " + (err.shortMessage || err.message));
+          return;
         }
       }
 
-      provider = new ethers.BrowserProvider(eth);
-      signer = await provider.getSigner();
-      userAddress = await signer.getAddress();
-      contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
-
-      document.getElementById("btnConnect").textContent = "Đã Kết Nối Core";
-      await refreshBalances();
-      setStatus("✅ Đã kết nối ví trên <b>Core Mainnet (1116)</b>. Sẵn sàng đặt cược!");
-    } catch (err) {
-      setStatus(`❌ Lỗi kết nối ví: ${err.message || err}`);
-    }
-  }
-
-  function resetBoardForNewMatch() {
-    board = cloneBoard(INITIAL_BOARD);
-    turn = "red";
-    selectedCell = null;
-    validMoves = [];
-    lastMove = null;
-    gameOver = false;
-  }
-
-  function startPracticeMatch() {
-    resetBoardForNewMatch();
-    activeMatch = {
-      matchId: "FREE",
-      betWei: "0",
-      isPractice: true,
-      status: "playing"
-    };
-    setStatus("🎮 Đang chơi thử miễn phí. Bạn cầm quân <b>Đỏ</b> đi trước!");
-    renderBoard();
-    updateUI();
-    saveState();
-  }
-
-  async function startOnChainMatch() {
-    if (!contract || !signer) {
-      await connectWallet();
-      if (!contract) return;
-    }
-
-    const betVal = Number(document.getElementById("betInput").value);
-    if (isNaN(betVal) || betVal < 0.01 || betVal > 1) {
-      alert("Mức cược hợp lệ từ 0.01 đến 1.00 CORE.");
-      return;
-    }
-
-    try {
-      const betWei = ethers.parseEther(betVal.toString());
-      setStatus("⏳ Đang gửi giao dịch đặt cược lên Core Mainnet... Vui lòng xác nhận trên ví.");
-
-      const tx = await contract.startMatch({ value: betWei });
-      setStatus(`⏳ Đã gửi giao dịch (<code>${tx.hash.slice(0, 12)}...</code>), đang chờ xác nhận khối...`);
-      const receipt = await tx.wait();
-
-      let parsedMatchId = null;
-      const iface = new ethers.Interface(CONTRACT_ABI);
-      for (const log of receipt.logs) {
-        try {
-          const parsed = iface.parseLog(log);
-          if (parsed && parsed.name === "MatchStarted") {
-            parsedMatchId = parsed.args.matchId.toString();
-            break;
-          }
-        } catch (_) {}
-      }
-
-      if (!parsedMatchId) {
-        const nextId = await contract.nextMatchId();
-        parsedMatchId = (BigInt(nextId) - 1n).toString();
-      }
-
-      resetBoardForNewMatch();
-      activeMatch = {
-        matchId: parsedMatchId,
-        betWei: betWei.toString(),
-        isPractice: false,
-        status: "playing"
+      const newId = Math.floor(200 + Math.random() * 800);
+      const newRoom = {
+        id: newId,
+        host: shortAddr(userAddress) || "Bạn (0xYou...1234)",
+        bet: bet,
+        turnSeconds: turnSec,
+        status: "Open"
       };
 
-      await refreshBalances();
-      setStatus(`✅ Ván <b>#${parsedMatchId}</b> đã khóa cược <b>${betVal} CORE</b>! Mời bạn đi quân Đỏ.`);
-      renderBoard();
-      updateUI();
-      saveState();
-    } catch (err) {
-      setStatus(`❌ Đặt cược thất bại: ${err.reason || err.message || err}`);
-    }
-  }
+      openRooms.unshift(newRoom);
+      renderRoomList();
 
-  async function requestSignatureFromBackend(payload) {
-    const workerUrl = document.getElementById("workerUrlInput").value.trim();
-    if (!workerUrl) {
-      throw new Error(
-        "Chưa nhập URL API Ký Xác Nhận (Worker/Backend). Hãy dán link API ký của ví Signer 0xf4f2...5433 vào ô Cấu Hình Backend rồi bấm lại."
-      );
-    }
-    saveState();
-    const res = await fetch(workerUrl, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload)
-    });
-    const data = await res.json();
-    if (!res.ok || !data.ok) {
-      throw new Error(data.error || "API ký xác nhận trả về lỗi.");
-    }
-    return data;
-  }
+      showToast(`Đã tạo Phòng #${newId} cược ${bet} CORE (${turnSec}s/nước). Đang chờ đối thủ vào kèo...`);
+      addChatSystem(`Bạn đã treo bảng Phòng #${newId} • Cược ${bet} CORE • ${turnSec}s/nước.`);
 
-  async function claimWinOnChain() {
-    if (!activeMatch || activeMatch.isPractice || activeMatch.status !== "won") return;
-    if (!contract || !userAddress) {
-      await connectWallet();
-      if (!contract) return;
+      // Giả lập có đối thủ nhận kèo sau 3.5 giây nếu chưa nối Firebase thật (để anh test trực tiếp luồng PvP)
+      setTimeout(() => {
+        if (!gameActive && gameMode === "pvp") {
+          startPvPMatch({
+            id: newId,
+            bet: bet,
+            turnSeconds: turnSec,
+            opponent: "0x7F2a...88D1"
+          });
+        }
+      }, 3500);
     }
 
-    try {
-      setStatus("⏳ Đang xin chữ ký xác nhận thắng từ Backend...");
-      const sigRes = await requestSignatureFromBackend({
-        action: "signWin",
-        matchId: activeMatch.matchId,
-        player: userAddress,
-        betWei: activeMatch.betWei
+    async function joinPvPRoom(roomId) {
+      const room = openRooms.find((r) => r.id === roomId);
+      if (!room) return;
+
+      if (signer && CONFIG.PVP_CONTRACT_ADDRESS !== "0x0000000000000000000000000000000000000000") {
+        try {
+          showToast(`Đang nạp ${room.bet} CORE để khớp kèo Phòng #${room.id}...`);
+          const contract = new ethers.Contract(CONFIG.PVP_CONTRACT_ADDRESS, PVP_ABI, signer);
+          const tx = await contract.joinRoom(room.id, { value: ethers.parseEther(String(room.bet)) });
+          await tx.wait();
+        } catch (err) {
+          showToast("Vào phòng thất bại: " + (err.shortMessage || err.message));
+          return;
+        }
+      }
+
+      openRooms = openRooms.filter((r) => r.id !== roomId);
+      renderRoomList();
+
+      startPvPMatch({
+        id: room.id,
+        bet: room.bet,
+        turnSeconds: room.turnSeconds,
+        opponent: room.host
       });
-
-      setStatus("⏳ Đang gọi hợp đồng <code>claimWin</code> để nhận x2 CORE...");
-      const tx = await contract.claimWin(activeMatch.matchId, sigRes.signature);
-      await tx.wait();
-
-      activeMatch.status = "claimed";
-      await refreshBalances();
-      setStatus("🏆 Đã nhận thưởng thành công về ví! Chúc mừng chiến thắng của bạn.");
-      updateUI();
-      saveState();
-    } catch (err) {
-      setStatus(`❌ Lỗi nhận thưởng: ${err.reason || err.message || err}`);
     }
-  }
 
-  async function cancelCurrentMatch() {
-    if (!activeMatch || activeMatch.status !== "playing") return;
+    function startPvPMatch(roomData) {
+      currentRoom = roomData;
+      turnDuration = roomData.turnSeconds;
+      initBoard();
+      gameActive = true;
+      currentTurn = "red";
+      pendingMove = null;
+      selectedCell = null;
 
-    if (activeMatch.isPractice) {
-      activeMatch = null;
-      resetBoardForNewMatch();
-      setStatus("Đã kết thúc ván chơi thử miễn phí.");
+      document.getElementById("matchBadge").textContent = `Phòng #${roomData.id} • Đang Đấu`;
+      document.getElementById("potDisplay").textContent = `${(roomData.bet * 2).toFixed(2)} CORE`;
+      document.getElementById("timeRuleDisplay").textContent = `${roomData.turnSeconds}s / nước`;
+      document.getElementById("opponentName").textContent = `${roomData.opponent} (Quân Đen)`;
+      document.getElementById("opponentSub").textContent = `Đã khớp cược ${roomData.bet} CORE`;
+      document.getElementById("btnCancelGame").disabled = false;
+
+      startTurnTimer();
       renderBoard();
-      updateUI();
-      saveState();
-      return;
+      updateActionButtons();
+
+      showToast(`Trận đấu Phòng #${roomData.id} bắt đầu! Tổng quỹ thưởng ${(roomData.bet * 2).toFixed(2)} CORE.`);
+      addChatSystem(`Đối thủ ${roomData.opponent} đã vào bàn! Trận đấu bắt đầu.`);
+      setTimeout(() => {
+        addChatMessage(roomData.opponent, "Chào bạn, mời bạn đi tiên!", false);
+      }, 1000);
     }
 
-    if (!contract || !userAddress) {
-      await connectWallet();
-      if (!contract) return;
-    }
+    function startNewAIGame() {
+      currentRoom = null;
+      const aiSec = parseInt(document.getElementById("aiTurnTime").value, 10);
+      turnDuration = aiSec;
+      initBoard();
+      gameActive = true;
+      currentTurn = "red";
+      pendingMove = null;
+      selectedCell = null;
 
-    const lost = countRedLost();
-    const refundPct = calcRefundPercent(lost);
-    const ok = confirm(
-      `Bạn đã mất ${lost} quân Đỏ nên sẽ được hoàn lại ${refundPct}% tiền cược. Xác nhận hủy ván #${activeMatch.matchId}?`
-    );
-    if (!ok) return;
+      document.getElementById("matchBadge").textContent = "Đấu Với Máy (AI)";
+      document.getElementById("potDisplay").textContent = "Miễn phí (Luyện tập)";
+      document.getElementById("timeRuleDisplay").textContent = aiSec > 0 ? `${aiSec}s / nước` : "Không giới hạn";
+      document.getElementById("opponentName").textContent = `Máy AI (Cấp ${document.getElementById("aiDifficulty").value})`;
+      document.getElementById("opponentSub").textContent = "Sẵn sàng phản đòn";
+      document.getElementById("btnCancelGame").disabled = false;
 
-    try {
-      setStatus("⏳ Đang xin chữ ký hoàn tiền hủy ván từ Backend...");
-      const sigRes = await requestSignatureFromBackend({
-        action: "signCancel",
-        matchId: activeMatch.matchId,
-        player: userAddress,
-        betWei: activeMatch.betWei,
-        lostPieces: lost
-      });
-
-      setStatus("⏳ Đang gọi hợp đồng <code>cancelMatch</code> để nhận lại tiền hoàn...");
-      const tx = await contract.cancelMatch(
-        activeMatch.matchId,
-        sigRes.refundWei,
-        sigRes.signature
-      );
-      await tx.wait();
-
-      activeMatch.status = "cancelled";
-      gameOver = true;
-      await refreshBalances();
-      const refundCore = ethers.formatEther(sigRes.refundWei);
-      setStatus(`✅ Đã hủy ván #${activeMatch.matchId} và hoàn lại <b>${refundCore} CORE</b> về ví.`);
+      startTurnTimer();
       renderBoard();
-      updateUI();
-      saveState();
-    } catch (err) {
-      setStatus(`❌ Lỗi hủy ván: ${err.reason || err.message || err}`);
+      updateActionButtons();
+      addChatSystem("Bắt đầu ván luyện tập với Máy AI. Bạn cầm quân Đỏ đi trước.");
     }
-  }
 
-  // ================= KHỞI CHẠY =================
-  document.getElementById("btnConnect").addEventListener("click", connectWallet);
-  document.getElementById("btnStartMatch").addEventListener("click", startOnChainMatch);
-  document.getElementById("btnPractice").addEventListener("click", startPracticeMatch);
-  document.getElementById("btnClaimWin").addEventListener("click", claimWinOnChain);
-  document.getElementById("btnCancelMatch").addEventListener("click", cancelCurrentMatch);
+    // Xử lý mở modal xin hủy chơi chịu phạt %
+    function openCancelModal() {
+      if (!gameActive) return;
+      const box = document.getElementById("cancelBreakdown");
 
-  loadState();
-  renderBoard();
-  updateUI();
-  refreshBalances();
-</script>
+      if (gameMode === "pvp" && currentRoom) {
+        const bet = currentRoom.bet;
+        const penalty = (bet * CONFIG.PENALTY_PERCENT) / 100;
+        const refund = bet - penalty;
+        const comp = bet + penalty;
+        box.innerHTML = `
+          <p>• Tiền cược của bạn trong phòng: <strong class="text-amber-300">${bet} CORE</strong></p>
+          <p>• Phí phạt hủy ván ngang (${CONFIG.PENALTY_PERCENT}%): <strong class="text-rose-400">-${penalty.toFixed(2)} CORE</strong> (bồi thường cho đối thủ)</p>
+          <p>• Số tiền hoàn về ví của bạn: <strong class="text-emerald-400">${refund.toFixed(2)} CORE</strong></p>
+          <p>• Đối thủ nhận lại: <strong>${comp.toFixed(2)} CORE</strong></p>
+        `;
+      } else {
+        box.innerHTML = `<p>Bạn đang ở chế độ luyện tập với Máy nên hủy ván sẽ không mất phí CORE.</p>`;
+      }
+
+      document.getElementById("cancelModal").classList.remove("hidden");
+    }
+
+    function closeCancelModal() {
+      document.getElementById("cancelModal").classList.add("hidden");
+    }
+
+    async function executeCancelWithPenalty() {
+      closeCancelModal();
+      if (!gameActive) return;
+
+      if (gameMode === "pvp" && currentRoom) {
+        const penalty = (currentRoom.bet * CONFIG.PENALTY_PERCENT) / 100;
+        const refund = currentRoom.bet - penalty;
+        addChatSystem(`Bạn đã xin hủy Phòng #${currentRoom.id}. Phạt ${penalty.toFixed(2)} CORE, hoàn lại ${refund.toFixed(2)} CORE.`);
+        showToast(`Đã hủy ván! Hoàn về ${refund.toFixed(2)} CORE (đã trừ ${penalty.toFixed(2)} CORE phí phạt).`);
+      } else {
+        addChatSystem("Bạn đã dừng ván luyện tập với Máy.");
+        showToast("Đã dừng ván đấu với Máy.");
+      }
+
+      endGameCleanup("Đã hủy ván");
+    }
+
+    // =========================================================================
+    // 6. ĐỒNG HỒ ĐẾM NGƯỢC & NÚT "ĐÃ ĐÁNH XONG NƯỚC"
+    // =========================================================================
+    function startTurnTimer() {
+      clearInterval(timerInterval);
+      const redBox = document.getElementById("redTimerBox");
+      const blackBox = document.getElementById("blackTimerBox");
+
+      if (turnDuration <= 0) {
+        redBox.textContent = "∞";
+        blackBox.textContent = "∞";
+        return;
+      }
+
+      timeLeft = turnDuration;
+      updateTimerUI();
+
+      timerInterval = setInterval(() => {
+        if (!gameActive) {
+          clearInterval(timerInterval);
+          return;
+        }
+        timeLeft--;
+        updateTimerUI();
+
+        if (timeLeft <= 0) {
+          clearInterval(timerInterval);
+          if (currentTurn === "red") {
+            handleGameOver("black", "Hết giờ! Bạn chưa bấm 'Đã Đánh Xong Nước' kịp thời gian.");
+          } else {
+            handleGameOver("red", "Đối thủ hết giờ suy nghĩ! Bạn giành chiến thắng!");
+          }
+        }
+      }, 1000);
+    }
+
+    function updateTimerUI() {
+      const formatted = `00:${String(Math.max(0, timeLeft)).padStart(2, "0")}`;
+      const redBox = document.getElementById("redTimerBox");
+      const blackBox = document.getElementById("blackTimerBox");
+
+      if (currentTurn === "red") {
+        redBox.textContent = formatted;
+        redBox.className = `px-3 py-1 rounded-xl bg-stone-950 border font-mono font-extrabold text-base ${timeLeft <= 7 ? "border-rose-500 text-rose-400 animate-pulse" : "border-amber-500 text-amber-400"}`;
+        blackBox.textContent = "--:--";
+        blackBox.className = "px-3 py-1 rounded-xl bg-stone-950 border border-stone-800 font-mono font-bold text-base text-stone-500";
+      } else {
+        blackBox.textContent = formatted;
+        blackBox.className = `px-3 py-1 rounded-xl bg-stone-950 border font-mono font-extrabold text-base ${timeLeft <= 7 ? "border-rose-500 text-rose-400 animate-pulse" : "border-sky-500 text-sky-400"}`;
+        redBox.textContent = "--:--";
+        redBox.className = "px-3 py-1 rounded-xl bg-stone-950 border border-stone-800 font-mono font-bold text-base text-stone-500";
+      }
+    }
+
+    function updateActionButtons() {
+      const btnConfirm = document.getElementById("btnConfirmMove");
+      const btnUndo = document.getElementById("btnUndoPending");
+      const hint = document.getElementById("turnHint");
+
+      if (!gameActive) {
+        btnConfirm.disabled = true;
+        btnUndo.disabled = true;
+        hint.textContent = "Tạo phòng hoặc chọn chế độ chơi để bắt đầu";
+        return;
+      }
+
+      if (currentTurn !== "red") {
+        btnConfirm.disabled = true;
+        btnUndo.disabled = true;
+        hint.textContent = "Đang tới lượt đối thủ suy nghĩ...";
+        return;
+      }
+
+      if (pendingMove) {
+        btnConfirm.disabled = false;
+        btnUndo.disabled = false;
+        hint.textContent = "Đã chọn nước đi! Bấm 'Đã Đánh Xong Nước' để chốt lượt.";
+      } else {
+        btnConfirm.disabled = true;
+        btnUndo.disabled = true;
+        hint.textContent = "Lượt của bạn: Chạm quân Đỏ và chọn ô muốn đi.";
+      }
+    }
+
+    // Hoàn tác nước đi dự kiến trước khi bấm chốt
+    function undoPendingMove() {
+      if (!pendingMove || currentTurn !== "red") return;
+      const { fromR, fromC, toR, toC, captured } = pendingMove;
+      board[fromR][fromC] = board[toR][toC];
+      board[toR][toC] = captured;
+      pendingMove = null;
+      selectedCell = null;
+      renderBoard();
+      updateActionButtons();
+    }
+
+    // Chốt nước đi khi người chơi bấm "Đã Đánh Xong Nước"
+    function confirmPlayerMove() {
+      if (!pendingMove || currentTurn !== "red" || !gameActive) return;
+
+      const capturedPiece = pendingMove.captured;
+      pendingMove = null;
+      selectedCell = null;
+
+      // Kiểm tra ăn Tướng đối phương
+      if (capturedPiece === "k") {
+        renderBoard();
+        handleGameOver("red", "Chiếu bí! Bạn đã bắt được Tướng đối phương!");
+        return;
+      }
+
+      // Chuyển lượt sang Đen
+      currentTurn = "black";
+      startTurnTimer();
+      renderBoard();
+      updateActionButtons();
+
+      // Phản hồi của Máy AI hoặc mô phỏng đối thủ PvP
+      if (gameMode === "ai") {
+        setTimeout(makeAIMove, 650);
+      } else {
+        setTimeout(simulatePvPOpponentMove, 1800);
+      }
+    }
+
+    // =========================================================================
+    // 7. LOGIC BÀN CỜ TƯỚNG & LUẬT DI CHUYỂN CHUẨN
+    // =========================================================================
+    function initBoard() {
+      board = [
+        ["r", "n", "b", "a", "k", "a", "b", "n", "r"],
+        [null, null, null, null, null, null, null, null, null],
+        [null, "c", null, null, null, null, null, "c", null],
+        ["p", null, "p", null, "p", null, "p", null, "p"],
+        [null, null, null, null, null, null, null, null, null],
+        [null, null, null, null, null, null, null, null, null],
+        ["P", null, "P", null, "P", null, "P", null, "P"],
+        [null, "C", null, null, null, null, null, "C", null],
+        [null, null, null, null, null, null, null, null, null],
+        ["R", "N", "B", "A", "K", "A", "B", "N", "R"]
+      ];
+    }
+
+    function isRedPiece(p) {
+      return p && p === p.toUpperCase();
+    }
+
+    function isBlackPiece(p) {
+      return p && p === p.toLowerCase();
+    }
+
+    function renderBoard() {
+      const layer = document.getElementById("piecesLayer");
+      layer.innerHTML = "";
+
+      for (let r = 0; r < 10; r++) {
+        for (let c = 0; c < 9; c++) {
+          const piece = board[r][c];
+          const cell = document.createElement("div");
+
+          // Vị trí giao điểm khớp chính xác với SVG viewBox 900x1000 (50 + c*100, 50 + r*100)
+          const leftPct = ((50 + c * 100) / 900) * 100;
+          const topPct = ((50 + r * 100) / 1000) * 100;
+
+          cell.style.left = `${leftPct}%`;
+          cell.style.top = `${topPct}%`;
+          cell.className = "absolute -translate-x-1/2 -translate-y-1/2 w-[10.2%] aspect-square flex items-center justify-center cursor-pointer";
+          cell.onclick = () => handleCellClick(r, c);
+
+          if (piece) {
+            const red = isRedPiece(piece);
+            const isSel = selectedCell && selectedCell.r === r && selectedCell.c === c;
+            const isPend = pendingMove && pendingMove.toR === r && pendingMove.toC === c;
+
+            const disc = document.createElement("div");
+            disc.className = `w-full h-full rounded-full flex items-center justify-center font-black hanzi text-base sm:text-xl md:text-2xl piece-shadow transition-transform ${
+              red
+                ? "bg-amber-50 text-red-700 border-2 border-red-700"
+                : "bg-stone-900 text-stone-100 border-2 border-stone-400"
+            } ${isSel ? "piece-selected" : ""} ${isPend ? "piece-pending" : ""}`;
+            disc.textContent = PIECE_LABELS[piece];
+            cell.appendChild(disc);
+          } else if (selectedCell && isValidMove(board, selectedCell.r, selectedCell.c, r, c)) {
+            // Chấm gợi ý nước đi hợp lệ
+            const dot = document.createElement("div");
+            dot.className = "w-3 h-3 rounded-full bg-emerald-500/80 ring-2 ring-white/70";
+            cell.appendChild(dot);
+          }
+
+          layer.appendChild(cell);
+        }
+      }
+    }
+
+    function handleCellClick(r, c) {
+      if (!gameActive || currentTurn !== "red") return;
+
+      // Nếu đã đi 1 nước dự kiến nhưng chưa bấm "Đã Đánh Xong Nước", tự hoàn tác trước khi chọn nước khác
+      if (pendingMove) {
+        undoPendingMove();
+      }
+
+      const clickedPiece = board[r][c];
+
+      if (clickedPiece && isRedPiece(clickedPiece)) {
+        selectedCell = { r, c };
+        renderBoard();
+        return;
+      }
+
+      if (selectedCell) {
+        if (isValidMove(board, selectedCell.r, selectedCell.c, r, c)) {
+          const captured = board[r][c];
+          board[r][c] = board[selectedCell.r][selectedCell.c];
+          board[selectedCell.r][selectedCell.c] = null;
+
+          pendingMove = {
+            fromR: selectedCell.r,
+            fromC: selectedCell.c,
+            toR: r,
+            toC: c,
+            captured
+          };
+          selectedCell = null;
+          renderBoard();
+          updateActionButtons();
+        } else {
+          showToast("Nước đi không hợp lệ theo luật Cờ Tướng!");
+        }
+      }
+    }
+
+    // Kiểm tra luật đi cơ bản chuẩn Cờ Tướng
+    function isValidMove(b, fr, fc, tr, tc) {
+      if (fr === tr && fc === tc) return false;
+      const piece = b[fr][fc];
+      const target = b[tr][tc];
+      if (!piece) return false;
+
+      const red = isRedPiece(piece);
+      if (target && (red ? isRedPiece(target) : isBlackPiece(target))) return false;
+
+      const dr = tr - fr;
+      const dc = tc - fc;
+      const absR = Math.abs(dr);
+      const absC = Math.abs(dc);
+      const type = piece.toLowerCase();
+
+      switch (type) {
+        case "r": { // Xe
+          if (fr !== tr && fc !== tc) return false;
+          return countObstacles(b, fr, fc, tr, tc) === 0;
+        }
+        case "c": { // Pháo
+          if (fr !== tr && fc !== tc) return false;
+          const obs = countObstacles(b, fr, fc, tr, tc);
+          return target ? obs === 1 : obs === 0;
+        }
+        case "n": { // Mã (có cản chân)
+          if (!((absR === 2 && absC === 1) || (absR === 1 && absC === 2))) return false;
+          const legR = fr + (absR === 2 ? dr / 2 : 0);
+          const legC = fc + (absC === 2 ? dc / 2 : 0);
+          return b[legR][legC] === null;
+        }
+        case "b": { // Tượng (không qua sông, có cản mắt tượng)
+          if (absR !== 2 || absC !== 2) return false;
+          if (red && tr < 5) return false;
+          if (!red && tr > 4) return false;
+          return b[fr + dr / 2][fc + dc / 2] === null;
+        }
+        case "a": { // Sĩ (trong cung)
+          if (absR !== 1 || absC !== 1) return false;
+          if (tc < 3 || tc > 5) return false;
+          return red ? tr >= 7 : tr <= 2;
+        }
+        case "k": { // Tướng (trong cung)
+          if (absR + absC !== 1) return false;
+          if (tc < 3 || tc > 5) return false;
+          return red ? tr >= 7 : tr <= 2;
+        }
+        case "p": { // Tốt
+          if (red) {
+            if (fr >= 5) return dr === -1 && dc === 0; // Chưa qua sông
+            return (dr === -1 && dc === 0) || (dr === 0 && absC === 1);
+          } else {
+            if (fr <= 4) return dr === 1 && dc === 0;
+            return (dr === 1 && dc === 0) || (dr === 0 && absC === 1);
+          }
+        }
+      }
+      return false;
+    }
+
+    function countObstacles(b, fr, fc, tr, tc) {
+      let count = 0;
+      if (fr === tr) {
+        const step = tc > fc ? 1 : -1;
+        for (let c = fc + step; c !== tc; c += step) {
+          if (b[fr][c] !== null) count++;
+        }
+      } else {
+        const step = tr > fr ? 1 : -1;
+        for (let r = fr + step; r !== tr; r += step) {
+          if (b[r][fc] !== null) count++;
+        }
+      }
+      return count;
+    }
+
+    // =========================================================================
+    // 8. AI MÁY ĐÁNH CỜ & MÔ PHỎNG ĐỐI THỦ PvP
+    // =========================================================================
+    function getAllMoves(b, side) {
+      const moves = [];
+      for (let r = 0; r < 10; r++) {
+        for (let c = 0; c < 9; c++) {
+          const p = b[r][c];
+          if (!p) continue;
+          if (side === "red" && !isRedPiece(p)) continue;
+          if (side === "black" && !isBlackPiece(p)) continue;
+
+          for (let tr = 0; tr < 10; tr++) {
+            for (let tc = 0; tc < 9; tc++) {
+              if (isValidMove(b, r, c, tr, tc)) {
+                moves.push({ fr: r, fc: c, tr, tc, target: b[tr][tc] });
+              }
+            }
+          }
+        }
+      }
+      return moves;
+    }
+
+    function evaluateBoard(b) {
+      let score = 0;
+      for (let r = 0; r < 10; r++) {
+        for (let c = 0; c < 9; c++) {
+          const p = b[r][c];
+          if (!p) continue;
+          const val = PIECE_VALUES[p] || 0;
+          score += isBlackPiece(p) ? val : -val;
+        }
+      }
+      return score;
+    }
+
+    function makeAIMove() {
+      if (!gameActive || currentTurn !== "black") return;
+      const moves = getAllMoves(board, "black");
+      if (moves.length === 0) {
+        handleGameOver("red", "Máy hết nước đi! Bạn thắng!");
+        return;
+      }
+
+      const depth = parseInt(document.getElementById("aiDifficulty").value, 10);
+      let bestMove = moves[0];
+      let bestScore = -Infinity;
+
+      for (const m of moves) {
+        const saved = board[m.tr][m.tc];
+        board[m.tr][m.tc] = board[m.fr][m.fc];
+        board[m.fr][m.fc] = null;
+
+        let score = evaluateBoard(board) + Math.random() * 4;
+        if (depth >= 2) {
+          // Phản ứng tốt nhất của Đỏ sau nước này
+          const replies = getAllMoves(board, "red");
+          let maxReplyLoss = 0;
+          for (const rep of replies) {
+            if (rep.target) {
+              maxReplyLoss = Math.max(maxReplyLoss, PIECE_VALUES[rep.target] || 0);
+            }
+          }
+          score -= maxReplyLoss * (depth === 3 ? 0.95 : 0.75);
+        }
+
+        board[m.fr][m.fc] = board[m.tr][m.tc];
+        board[m.tr][m.tc] = saved;
+
+        if (score > bestScore) {
+          bestScore = score;
+          bestMove = m;
+        }
+      }
+
+      const captured = board[bestMove.tr][bestMove.tc];
+      board[bestMove.tr][bestMove.tc] = board[bestMove.fr][bestMove.fc];
+      board[bestMove.fr][bestMove.fc] = null;
+
+      if (captured === "K") {
+        renderBoard();
+        handleGameOver("black", "Máy AI đã chiếu bí Tướng của bạn!");
+        return;
+      }
+
+      currentTurn = "red";
+      startTurnTimer();
+      renderBoard();
+      updateActionButtons();
+    }
+
+    function simulatePvPOpponentMove() {
+      if (!gameActive || currentTurn !== "black") return;
+      makeAIMove();
+      if (gameActive && Math.random() < 0.35) {
+        const replies = ["Nước cờ căng đấy!", "Tới lượt bạn rồi!", "Để xem bạn đỡ thế nào!"];
+        addChatMessage(currentRoom?.opponent || "Đối thủ", replies[Math.floor(Math.random() * replies.length)], false);
+      }
+    }
+
+    function handleGameOver(winnerSide, reason) {
+      clearInterval(timerInterval);
+      gameActive = false;
+      updateActionButtons();
+
+      if (winnerSide === "red") {
+        const rewardText = currentRoom ? ` Nhận thưởng ${(currentRoom.bet * 2).toFixed(2)} CORE từ hợp đồng ký quỹ!` : "";
+        showToast(`🏆 CHIẾN THẮNG! ${reason}${rewardText}`);
+        addChatSystem(`🏆 Kết quả: Bạn thắng! ${reason}${rewardText}`);
+      } else {
+        showToast(`💔 THUA CUỘC! ${reason}`);
+        addChatSystem(`💔 Kết quả: Bạn thua. ${reason}`);
+      }
+
+      endGameCleanup(winnerSide === "red" ? "Bạn Thắng" : "Bạn Thua");
+    }
+
+    function endGameCleanup(badgeText) {
+      clearInterval(timerInterval);
+      gameActive = false;
+      pendingMove = null;
+      selectedCell = null;
+      document.getElementById("matchBadge").textContent = badgeText;
+      document.getElementById("btnCancelGame").disabled = true;
+      updateActionButtons();
+    }
+
+    // =========================================================================
+    // 9. KHUNG CHAT TRỰC TIẾP TRONG PHÒNG
+    // =========================================================================
+    function addChatSystem(text) {
+      const box = document.getElementById("chatMessages");
+      const div = document.createElement("div");
+      div.className = "bg-stone-950/90 border border-stone-800 rounded-xl p-2 text-amber-300/90 text-[11px]";
+      div.textContent = `⚙️ ${text}`;
+      box.appendChild(div);
+      box.scrollTop = box.scrollHeight;
+    }
+
+    function addChatMessage(sender, text, isMe) {
+      const box = document.getElementById("chatMessages");
+      const wrapper = document.createElement("div");
+      wrapper.className = `flex flex-col ${isMe ? "items-end" : "items-start"}`;
+
+      wrapper.innerHTML = `
+        <span class="text-[10px] text-stone-400 mb-0.5 px-1">${sender}</span>
+        <div class="max-w-[85%] px-3 py-2 rounded-2xl text-xs leading-relaxed ${
+          isMe
+            ? "bg-amber-600 text-stone-950 font-semibold rounded-br-sm"
+            : "bg-stone-800 text-stone-100 rounded-bl-sm"
+        }">${escapeHtml(text)}</div>
+      `;
+      box.appendChild(wrapper);
+      box.scrollTop = box.scrollHeight;
+    }
+
+    function handleChatSubmit(e) {
+      e.preventDefault();
+      const input = document.getElementById("chatInput");
+      const text = input.value.trim();
+      if (!text) return;
+      addChatMessage(shortAddr(userAddress) || "Bạn", text, true);
+      input.value = "";
+    }
+
+    function sendQuickChat(text) {
+      addChatMessage(shortAddr(userAddress) || "Bạn", text, true);
+    }
+
+    function escapeHtml(str) {
+      return str
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+    }
+
+    // Khởi tạo bàn cờ mặc định khi mở trang
+    initBoard();
+    renderRoomList();
+    renderBoard();
+    updateActionButtons();
+  </script>
 </body>
 </html>
